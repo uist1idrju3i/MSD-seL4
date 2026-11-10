@@ -7,16 +7,19 @@
       "content": "Wiki は日本語で書いてください。コード、識別子、ファイル名、CMake の変数、コマンドは英語のまま記載します。README.md、AGENTS.md、.agents/skills/、research/、docs/ も日本語です。"
     },
     {
-      "content": "現在は開発の準備段階です。OS の実装、driver、ビルド、実機での確認はまだありません。未実装の機能を既にある機能のように説明しないでください。"
+      "content": "現在は開発の準備段階です。検証済み構成の kernel の build と、QEMU raspi3b での最小の root task（C の projects/smoke と Rust の projects/rust-smoke）の起動を CI で確かめています。driver は全機種の調査（research/drivers/）が終わり、実装はまだありません。実機での確認もありません。未実装の機能を既にある機能のように説明せず、QEMU の結果を実機の結果として書かないでください。"
     },
     {
-      "content": "seL4 kernel は vendor/seL4（17.0.0）を改変せずに使い、検証済み構成 ARM_bcm2837_verified（AArch32、EL1、単一コア、FPU の context switch なし、MCS なし）を既定にする方針です。kernel の証明は、kernel の起動処理、SMMU/IOMMU、debug・printing、ハードウェア、firmware、boot loader、ユーザー空間の driver とアプリケーションを対象にしていません。「システム全体が検証済み」と書かないでください。"
+      "content": "seL4 kernel は vendor/seL4（17.0.0）を直接は編集せず、起動処理の不具合を直す patch（patches/seL4/）を build 時の写しに当てて使い、検証済み構成 ARM_bcm2837_verified（AArch32、EL1、単一コア、FPU の context switch なし、MCS なし）を既定にする方針です。kernel の証明は、kernel の起動処理、SMMU/IOMMU、debug・printing、ハードウェア、firmware、boot loader、ユーザー空間の driver とアプリケーションを対象にしていません。「システム全体が検証済み」と書かないでください。"
     },
     {
-      "content": "vendor/ 配下（vendor/seL4、vendor/seL4_tools、vendor/m5stack-linux-dtoverlays、vendor/yomiyasu）は shallow submodule で取り込んだ外部コードです。内部を詳しく説明する必要はありません。どの tag/commit を使っているかは .gitmodules と git submodule status を根拠にしてください。m5stack-linux-dtoverlays は GPL のため、ハードウェアの仕様を読む資料としてだけ使います。"
+      "content": "vendor/ 配下（seL4、seL4_tools、musllibc、sel4runtime、util_libs、m5stack-linux-dtoverlays、yomiyasu）は shallow submodule で取り込んだ外部コードです。内部を詳しく説明する必要はありません。どの tag/commit を使っているかは .gitmodules と git submodule status を根拠にしてください。m5stack-linux-dtoverlays は GPL のため、ハードウェアの仕様を読む資料としてだけ使います。"
     },
     {
       "content": "docs/ は GitHub Pages で公開するサイト専用です。内部の調査・設計・実験の記録は research/ にあります。確認済みの事実、推測、未確認事項を区別してください。"
+    },
+    {
+      "content": "userland の基盤は capDL と capdl-loader-app（C）に決定済みです。Rust（rust-sel4）は部品の言語の候補として評価中で、基盤の置き換えではありません。DMA は、中央の DMA controller を DMA server だけが持ち、自分で bus master になる device（USB、カメラ、VideoCore、mailbox）の driver を全メモリに届く部品として扱う方針です。根拠は research/sel4/ と research/drivers/dma-iommu.md です。"
     }
   ],
   "pages": [
@@ -66,6 +69,9 @@
       "page_notes": [
         {
           "content": ".agents/skills/sel4-driver/、research/drivers/、README.md を根拠にしてください。未着手の driver を対応済みと書かないでください。"
+        },
+        {
+          "content": "driver ごとの調査は research/drivers/ にあり、状態は「調査済み」です。各 driver の実装の前に計画を利用者が確認します。research/experiments/hardware-checklist.md は実機での確認の計画で、まだ実施していません。"
         }
       ]
     },
@@ -76,6 +82,46 @@
       "page_notes": [
         {
           "content": ".gitmodules、AGENTS.md §3・§4、LICENSE、.agents/skills/vendor-update/ を根拠にしてください。"
+        }
+      ]
+    },
+    {
+      "title": "起動の流れと QEMU の smoke test",
+      "purpose": "BCM2837 の起動の順序、elfloader、patches/seL4/ の FPU の patch、tools/qemu-smoke.sh、C と Rust の root task、QEMU と実機の違いを説明する",
+      "parent": "seL4 の検証済み構成と証明の範囲",
+      "page_notes": [
+        {
+          "content": "research/sel4/boot-chain.md、research/sel4/verified-config-deviations.md、research/experiments/、tools/、projects/ を根拠にしてください。QEMU の結果は実機の結果ではありません。"
+        }
+      ]
+    },
+    {
+      "title": "DMA と IOMMU、割り込み制御器の page",
+      "purpose": "IOMMU がないことの影響、DMA server と bus master の device の扱い、mailbox と割り込み制御器が同じ page にあることと証明の前提を説明する",
+      "parent": "保護ドメインと capability の設計",
+      "page_notes": [
+        {
+          "content": "research/drivers/dma-iommu.md、research/drivers/soc-blocks.md、research/sel4/shared-intc-page.md を根拠にしてください。"
+        }
+      ]
+    },
+    {
+      "title": "kernel 以外の形式検証と Rust の検討",
+      "purpose": "capDL の初期化、driver、IPC の契約などをどの方法で確かめるか、Rust（rust-sel4）の対応状況と採用の段階を説明する",
+      "parent": "seL4 の検証済み構成と証明の範囲",
+      "page_notes": [
+        {
+          "content": "research/verification/、research/sel4/rust.md、research/sel4/rust-adoption.md を根拠にしてください。まだ実装はありません。"
+        }
+      ]
+    },
+    {
+      "title": "開発環境と CI",
+      "purpose": "docker/msd-sel4-dev、GitHub Actions の各 workflow（変更の判定と結果の job、CodeQL、pins-check）、Dependabot を説明する",
+      "parent": "リポジトリ構成と開発ルール",
+      "page_notes": [
+        {
+          "content": "docker/README.md、.github/workflows/、.github/scripts/、AGENTS.md §10 を根拠にしてください。"
         }
       ]
     }

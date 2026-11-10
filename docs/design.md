@@ -32,3 +32,14 @@ QEMU で動いても、CardputerZero の実機で動くことの確認にはな�
 ## driver をユーザー空間に置く理由
 
 seL4 の kernel には device の driver がありません。driver はユーザー空間の独立した保護ドメインとして動き、渡された device と共有メモリにだけ触れます。1 つの driver の不具合が、ほかの部品や kernel に広がりにくくなります。ただし BCM2837 には IOMMU がないため、DMA を使う driver はメモリ全体に書き込める部品として扱います。
+
+## DMA の扱い
+
+BCM2837 には IOMMU がないので、DMA の転送先を hardware で制限できません。そこで device を 2 種類に分けます。
+
+- 中央の DMA controller を使う device（SPI の LCD、microSD、音声）: DMA controller を操作できるのは、小さな DMA server だけにします。driver は登録した buffer の範囲で転送を依頼し、DMA server が範囲を確かめます。メモリ全体に届くのは DMA server だけです。
+- 自分で bus master になる device（USB、カメラ、VideoCore、mailbox）: register を操作できるだけでメモリ全体に届くため、その driver をメモリ全体に届く部品として扱い、できるだけ小さくします。
+
+## 割り込み制御器と mailbox
+
+BCM2837 では、firmware と通信する mailbox が、kernel の使う割り込み制御器と同じ 4 KiB の page にあります。seL4 の証明は、user の部品が device に書いても kernel の割り込みの mask は変わらないことを前提にしています。このため、この page は mailbox の driver だけに渡し、その driver が割り込み制御器の register を書かないことを検証の対象にする案を検討しています。
