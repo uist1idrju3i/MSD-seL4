@@ -28,6 +28,7 @@
 
 ### 変更
 
+- DMA の方針を決めました（`research/drivers/dma-iommu.md`）。中央の DMA controller を使う device（SPI、SDHOST、I2S など）は、DMA server を通した DMA を既定にし、driver には DMA controller の capability を渡しません。自分で bus master になる device（USB、カメラ、VideoCore、mailbox）は device 自身の DMA を既定にします。PIO は、DMA server ができるまでの間と比較のために残します。AGENTS.md と sel4-capability-design スキルも合わせました。
 - seL4 17.0.0 の起動処理の不具合を直す patch（`patches/seL4/`）を加えました。FPU を使わない構成では、`vmrs fpexc` で Undefined Instruction になります。patch は `tools/prepare-sel4-source.sh` が build 時の写しに当て、`vendor/seL4` は変えません。`tools/build-verified-kernel.sh` と `tools/qemu-smoke.sh` は、既定で patch を当てた kernel を build します（`MSD_SEL4_PATCHES=none` で改変なし）。CI の `kernel-verified` は、QEMU raspi3b の smoke test も実行します。週次の `pins-check` は、seL4 の master で patch の箇所が変わったかを知らせます。
 - PR の本文と完了報告で、確かめていないことを最初に書く運用を AGENTS.md に加え、PR template（`.github/pull_request_template.md`）を追加しました。
 

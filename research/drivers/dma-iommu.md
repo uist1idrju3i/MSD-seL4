@@ -4,7 +4,7 @@
 
 BCM2837 には IOMMU がありません（[資源の設計方針](../sel4/system-architecture.md)）。この文書では、DMA を使う部品が壊れたり乗っ取られたりしたときに何が起きるかを device ごとに評価し、PIO（CPU が FIFO を読み書きする方式）と DMA のどちらを選ぶかの基準を決めます。QEMU で確かめられる範囲と、実機でしか確かめられない範囲も分けます。
 
-状態: 調査と方針の案です。性能の値は、測定していない推測です。方針は利用者の判断を得てから決定とします。
+状態: 方針は決定です（利用者の判断、2026-11-11。「決定」の節）。性能の値は、測定していない推測です。
 
 ## 何が起きるか
 
@@ -37,7 +37,7 @@ EMMC（Arasan の SDHCI）は、SDHCI の規格では SDMA と ADMA を持てま
 
 性能の欄は、どれも推測です。driver の調査のときに、QEMU ではなく実機で測ります。
 
-| device | DMA の経路 | 外部からの入力 | PIO の性能の見込み | 方針の案 |
+| device | DMA の経路 | 外部からの入力 | PIO の性能の見込み | 当初の案（PIO を既定） |
 |---|---|---|---|---|
 | I2C の各 device、GPIO、UART、IR、RTC、電池、IMU、キーボード | なし、または中央 | 少ない | 問題ない | PIO |
 | 音声（PCM・I2S） | 中央 | なし | 48 kHz の stereo で、FIFO の半分ごとの割り込みが毎秒約 1,500 回 | PIO で始める |
@@ -52,11 +52,13 @@ EMMC（Arasan の SDHCI）は、SDHCI の規格では SDMA と ADMA を持てま
 
 ## 影響を抑える方法
 
-### 1. DMA controller の capability を誰にも渡さない（既定）
+「device ごとの評価」の表と、この節の 1 と 2 は当初の案（PIO を既定）です。決めた方針は「決定」の節にあります。
+
+### 1. DMA controller の capability を誰にも渡さない（当初の案の既定）
 
 中央の DMA controller を使う device は、すべて PIO で動かします。DMA controller の MMIO の frame を root task から渡さなければ、DMA の経路そのものがなくなります。capDL の記述で、DMA controller の frame がどの保護ドメインにも map されていないことを機械的に検査できます。
 
-### 2. DMA server（性能が足りない device だけ）
+### 2. DMA server（当初の案では性能が足りない device だけ）
 
 PIO で性能が足りないと実機で分かった device（LCD が最初の候補）は、driver に DMA controller を渡さず、DMA server という小さな保護ドメインを置きます。
 
@@ -98,11 +100,33 @@ QEMU 10.0 の raspi3b を source（`hw/arm/bcm2835_peripherals.c` ほか）で�
 
 QEMU は cache を模擬しないため、DMA の前後の cache の clean・invalidate を忘れても QEMU では動きます。cache の扱いは、実機と review でしか確かめられません。
 
-## 決めること
+## 決定（2026-11-11）
 
-次の方針を案として提示し、利用者の判断を待っています。
+利用者は、乗っ取られたときの影響が PIO でも変わらない device では DMA を既定にする、と判断しました。中央の DMA controller についても、DMA server が DMA controller を持てば、driver には DMA を渡さずに分離を保てます。この 2 点から、次の方針に決めました。
+
+| device の種類 | 既定 | 全メモリに届く部品 | 理由 |
+|---|---|---|---|
+| 中央の DMA controller を使う device（SPI の LCD、SDHOST、PCM・I2S など） | DMA server を通した DMA | DMA server だけ | driver は DMA controller の capability を持たない。DMA server が転送元と転送先を登録済みの buffer と device の FIFO に限るので、driver が乗っ取られても DMA ではほかのメモリに届かない |
+| 自分で bus master になる device（USB の DWC2、カメラの unicam、VideoCore、mailbox） | device 自身の DMA | その driver | MMIO の capability を持つだけでメモリ全体に届くため、PIO にしても乗っ取られたときの影響は変わらない。DWC2 は DMA mode を既定にする |
+| DMA を使わない device（I2C、GPIO、UART、IR、RTC、電池、IMU、キーボード） | PIO | なし | 転送量が少ない |
+| EMMC（Arasan の SDHCI） | bus master かどうかを確かめるまでは bus master として扱う | その driver | 実機の DMA の有無が未確認 |
+
+- PIO は、DMA server ができるまでの間と、試験で DMA と比べるために残します。
+- DMA server は、DMA controller の MMIO と、control block を置くメモリを持つ唯一の保護ドメインです。client と control block を共有しません。control block の chain（`NEXTCONBK`）も DMA server が作ります。capDL の記述で、DMA controller の frame が DMA server にだけ map されていることを機械的に検査します。
+- DMA server は全メモリに届くため、信頼する部品（TCB）に入ります。形式検証（Frama-C、CBMC など）と試験の優先度を最も高くします。外部からの data は処理しません。
+- 転送のたびに、client と DMA server の間で IPC が少なくとも 1 回増えます。この負荷を、LCD の frame rate と音声の遅延で測ります。
+- bus master の device の driver は「全メモリに書ける部品」として capability の表に書きます。外部からの data の解析（USB の descriptor、network の protocol）は、別の保護ドメインに分けます。
+- QEMU の使い方は変えません。driver の手順と DMA server の address の検査に使い、性能、cache、音声、USB の Slave mode、実際の device の応答は実機で確かめます。
+
+### DMA controller を driver ごとに分けて渡せない理由
+
+seL4 の frame は 4 KiB 単位です。BCM2837 の DMA controller の channel 0〜14 は 0x100 ずつの間隔で並び、1 つの 4 KiB page に収まります（`vendor/seL4/tools/dts/rpi3.dts` の `dma@7e007000` は `reg = < 0x7e007000 0xf00 >`）。このため、channel ごとに frame の capability を分けて driver に渡すことはできません。channel の割り当ても DMA server が持ちます。
+
+### 当初の案（PIO を既定、2026-11-11 に変更）
 
 1. 中央の DMA controller を使う device は PIO で作り、DMA controller の capability は誰にも渡さない。
 2. PIO で性能が足りないと実機で分かったときは、driver に DMA を渡さず、DMA server を置く。
 3. bus master の device の driver は「全メモリに書ける部品」として扱い、外部からの data の解析を別の保護ドメインに分ける。DWC2 の mode は性能で選ぶ。
 4. QEMU は、driver の手順と DMA server の検査に使う。性能、cache、音声、USB の Slave mode、実際の device の応答は実機で確かめる。
+
+この案では、DMA server を作るまでの手間は省けます。一方で、乗っ取られたときの影響が変わらない bus master の device にまで性能の損失を負わせます。中央の DMA を使う device も、DMA server があれば DMA を使って分離を保てます。このため変更しました。
