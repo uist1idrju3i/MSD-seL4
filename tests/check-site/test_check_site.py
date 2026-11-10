@@ -51,7 +51,7 @@ class CheckSiteTest(unittest.TestCase):
         self.assertIn("leaves docs/", "\n".join(self.errors()))
 
     def test_rejects_non_site_file(self) -> None:
-        (self.root / "docs/notes.txt").write_text("x", encoding="utf-8")
+        (self.root / "docs" / "notes.txt").write_text("x", encoding="utf-8")
         self.assertIn("only site sources", "\n".join(self.errors()))
 
     def test_rejects_missing_front_matter(self) -> None:
