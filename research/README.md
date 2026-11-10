@@ -30,5 +30,6 @@ MSD/seL4 の内部文書です。公開サイトは `docs/` にあります。�
 | [drivers/README.md](drivers/README.md) | driver ごとの状況 |
 | [security/threat-model.md](security/threat-model.md) | 脅威と、seL4 で防げる範囲・防げない範囲 |
 | [verification/layers.md](verification/layers.md) | 証明・host・QEMU・実機の確認の階層 |
+| [verification/beyond-kernel.md](verification/beyond-kernel.md) | kernel 以外の形式検証の道具、層ごとの判断、計画、柱への追加 |
 | [vendor/dependencies.md](vendor/dependencies.md) | 依存の固定版、ライセンス、採用の理由 |
 | [experiments/README.md](experiments/README.md) | 実験記録の一覧 |
