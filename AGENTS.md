@@ -107,6 +107,7 @@ python3 .github/scripts/check-jisx0213.py && tests/check-jisx0213/run.sh  # 文�
 python3 .github/scripts/check-links.py && tests/check-links/run.sh        # 文書のリンク
 python3 .github/scripts/check-doc-size.py && tests/check-doc-size/run.sh  # 文書の大きさ
 python3 .github/scripts/shellcheck-tracked.py                             # shell script
+python3 .github/scripts/check-site.py && tests/check-site/run.sh        # 公開サイトの元（build 後は --site <dir>）
 python3 .github/scripts/check-pins.py consistency && python3 .github/scripts/check-pins.py manifest && tests/check-pins/run.sh  # 固定値
 python3 .agents/skills/yomiyasu/scripts/yomiyasu_lint.py <file>  # 日本語文書の候補検査
 python3 -m json.tool .devin/wiki.json >/dev/null  # DeepWiki 設定の JSON 検査

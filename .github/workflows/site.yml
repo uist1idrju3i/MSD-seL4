@@ -1,0 +1,41 @@
+name: Site
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: site-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check site sources
+        run: python3 .github/scripts/check-site.py
+
+      # The same builder that GitHub Pages uses for docs/ on main.
+      - uses: actions/jekyll-build-pages@44a6e6beabd48582f863aeeb6cb2151cc1716697 # v1.0.13
+        with:
+          source: ./docs
+          destination: ./_site
+          verbose: false
+
+      - name: Check built site
+        run: python3 .github/scripts/check-site.py --site _site
+
+      - name: Test the site checker
+        run: tests/check-site/run.sh
