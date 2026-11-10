@@ -31,6 +31,8 @@ MSD/seL4 の内部文書です。公開サイトは `docs/` にあります。�
 | [hardware/inventory.md](hardware/inventory.md) | CardputerZero の device と接続 |
 | [drivers/README.md](drivers/README.md) | driver ごとの状況 |
 | [drivers/dma-iommu.md](drivers/dma-iommu.md) | IOMMU がないことの影響、PIO と DMA の方針の案、QEMU で確かめられる範囲 |
+| [drivers/soc-blocks.md](drivers/soc-blocks.md) | BCM2837 の共通の部品（GPIO、割り込み、mailbox、UART、I2C、SPI、DMA、PWM、clock）の address、割り込みの共有、kernel と共有する page |
+| drivers/ の各 device の文書 | LCD、キーボード、M5IOE1、電源異常、RTC、電池、microSD、USB、音声、IMU、IR、HDMI、無線、カメラ、拡張端子の調査（一覧は [drivers/README.md](drivers/README.md)） |
 | [security/threat-model.md](security/threat-model.md) | 脅威と、seL4 で防げる範囲・防げない範囲 |
 | [verification/layers.md](verification/layers.md) | 証明・host・QEMU・実機の確認の階層 |
 | [verification/beyond-kernel.md](verification/beyond-kernel.md) | kernel 以外の形式検証の道具、層ごとの判断、計画、柱への追加 |
