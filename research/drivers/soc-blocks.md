@@ -51,7 +51,7 @@ CardputerZero の各 device の driver が使う、SoC 側の部品の調査で�
 
 - mailbox（`0x3F00B880`）は、kernel の割り込み controller（`0x3F00B200`）と同じ 4 KiB page にあります。mailbox の driver に page を渡すと、その driver は割り込み controller の register も書けます。割り込みの mask を変えれば、ほかの部品の割り込みを止められます。【推測。register の効果は datasheet による】
 - このため、mailbox の page は、kernel の割り込みを妨げてよい部品、つまり信頼の前提（TCB）に近い部品にだけ渡します。[dma-iommu.md](dma-iommu.md) で mailbox をすでに「全メモリに届く部品」としているので、扱いの重さは変わりません。ただし、mailbox の driver はできるだけ小さくします。
-- 割り込み controller の page を userland に渡しても、kernel の証明の前提（kernel だけが割り込み controller を操作する）が崩れるかどうかは確かめていません。【未確認。l4v の machine の前提を調べる】
+- 証明の model では、user の書き込みは割り込みの mask（`irq_masks`）を変えません。page を map した部品が割り込み controller を書くと、実機と model が食い違います。選択肢と推奨は [shared-intc-page.md](../sel4/shared-intc-page.md) にあります。
 
 ## 割り込みの共有
 
@@ -109,6 +109,6 @@ seL4 では 1 つの IRQ の capability を 1 つの部品が受け取ります�
 
 ## 決めること（利用者の判断）
 
-1. 割り込み controller と同じ page にある mailbox を、どの部品に渡すか。推奨: mailbox の driver を 1 つにし、TCB に入れて小さく作る。property の種類は許可表で限る。
+1. 割り込み controller と同じ page にある mailbox を、どの部品に渡すか。推奨: mailbox の driver だけに渡し、割り込み controller を書かないことを driver の検証の対象にする（[shared-intc-page.md](../sel4/shared-intc-page.md) の案 A）。
 2. clock を誰が設定するか。推奨: 起動の直後は firmware に任せ、変更が要る PCM の clock だけ mailbox の property で設定する。
 3. I2C の BSC0・BSC1・BSC2 を 1 つの部品にまとめるか。推奨: 1 つにまとめる。割り込みが共有で、分けても隔離が強くならないため。

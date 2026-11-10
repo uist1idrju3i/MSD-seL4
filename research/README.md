@@ -29,6 +29,8 @@ MSD/seL4 の内部文書です。公開サイトは `docs/` にあります。�
 | [sel4/rust-adoption.md](sel4/rust-adoption.md) | Rust の採用の検討（unsafe の境界、形式検証、toolchain、ライセンス、段階的な採用の案） |
 | [sel4/system-architecture.md](sel4/system-architecture.md) | 部品の分け方と、capability・IPC・IRQ・MMIO・DMA・fault の設計方針 |
 | [hardware/inventory.md](hardware/inventory.md) | CardputerZero の device と接続 |
+| [sel4/shared-intc-page.md](sel4/shared-intc-page.md) | 割り込み controller と mailbox が同じ page にあることと、kernel の証明の前提 |
+| [experiments/hardware-checklist.md](experiments/hardware-checklist.md) | 実機の確認の計画（手順と合否の基準） |
 | [drivers/README.md](drivers/README.md) | driver ごとの状況 |
 | [drivers/dma-iommu.md](drivers/dma-iommu.md) | IOMMU がないことの影響、PIO と DMA の方針の案、QEMU で確かめられる範囲 |
 | [drivers/soc-blocks.md](drivers/soc-blocks.md) | BCM2837 の共通の部品（GPIO、割り込み、mailbox、UART、I2C、SPI、DMA、PWM、clock）の address、割り込みの共有、kernel と共有する page |
