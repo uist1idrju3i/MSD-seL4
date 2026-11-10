@@ -20,6 +20,8 @@
 
 - seL4 の調査を `research/sel4/` に加えました。形式検証済みのアーキテクチャと platform ごとの SoC・CPU の一覧、userland の基盤の版と推奨、capability・IPC・IRQ・MMIO・DMA の設計方針です。
 
+- kernel 以外の形式検証の調査（`research/verification/beyond-kernel.md`）を加えました。README と公開サイトの設計の頁に、形式検証の範囲、検証していない部分、証明の前提を書き、README に Mermaid の図を加えました。「検証できる」の柱に、kernel の外での形式検証の方針を加えました。
+
 ### 変更
 
 - `main` の `publish-dev-image` は、来歴を検証できる同じ入力の image が公開済みなら build と push を省きます。Trivy の DB を `actions/cache` に置きます。
