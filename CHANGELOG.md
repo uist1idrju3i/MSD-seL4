@@ -28,5 +28,7 @@
 
 ### 変更
 
+- PR の本文と完了報告で、確かめていないことを最初に書く運用を AGENTS.md に加え、PR template（`.github/pull_request_template.md`）を追加しました。
+
 - `main` の `publish-dev-image` は、来歴を検証できる同じ入力の image が公開済みなら build と push を省きます。Trivy の DB を `actions/cache` に置きます。
 - Trivy を 0.76.2 に、`debian:trixie-slim` の digest と Debian snapshot を 20261109T224401Z に上げました。
