@@ -17,7 +17,7 @@ description: MSD/seL4 のシステムを保護ドメインに分け、capability
 1. 機能ごとに、扱うデータ、信頼の前提、障害時の影響を書きます。
 2. 保護ドメインの一覧を作り、各ドメインの役割、優先度、予算、扱うデータを書きます。
 3. capability の表を作ります。列は「保護ドメイン」「対象（endpoint、notification、共有メモリ、device のメモリ、IRQ、untyped など）」「権限（読み・書き・実行・grant など）」「理由」です。
-4. DMA を使う device（SDHOST/SDHCI、USB、DMA controller など）の driver は、IOMMU がないため全メモリに書ける部品として扱い、表に明記します。DMA の対象を限る方法（専用の領域、検証した descriptor の作り方）を書きます。
+4. DMA を指示できる部品（DMA server、USB・カメラ・VideoCore・mailbox の driver など）は、IOMMU がないため全メモリに書ける部品として扱い、表に明記します。中央の DMA controller の frame は DMA server にだけ渡し、ほかの driver には渡しません（[IOMMU がないことの影響](../../../research/drivers/dma-iommu.md)）。DMA の対象を限る方法（専用の領域、検証した descriptor の作り方）を書きます。
 5. capDL などの記述と表を照合する検査を用意し、CI で表と記述の一致を確かめます。
 6. 障害の影響を確かめます。1 つの部品が止まった・暴走したとき、ほかの部品と永続データに何が起きるかを書き、復帰の方法（再起動する部品、監視する部品）を決めます。
 

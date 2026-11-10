@@ -84,7 +84,7 @@ Devin / Codex / Claude Code など、このリポジトリで作業するすべ�
 - 証明の範囲を正確に書きます。kernel の証明は、kernel の起動処理、SMMU/IOMMU、debug・printing、ハードウェア、firmware、boot loader、ユーザー空間の driver とアプリケーションを含みません。「seL4 を使っているので安全」「検証済みのシステム」とは書きません。
 - システムは保護ドメインに分け、各部品に必要な capability だけを静的に渡します。実行時に権限を増やす部品を作りません。部品の分割と capability の表は「sel4-capability-design」スキルに従います。
 - device の driver はユーザー空間の独立した保護ドメインとして自作します。driver ごとに深い調査と深い計画を立て、利用者の確認を得てから実装します。手順は「sel4-driver」スキルに従います。
-- DMA を使う device は IOMMU で制限できないため、その driver を「全メモリに書ける部品」として扱い、capability の表に明記します。
+- DMA を使う device は IOMMU で制限できないため、DMA を指示できる部品を「全メモリに書ける部品」として扱い、capability の表に明記します。中央の DMA controller の capability は DMA server だけに渡し、driver には渡しません。自分で bus master になる device（USB、カメラ、VideoCore、mailbox）は device 自身の DMA を既定にします。方針は [IOMMU がないことの影響](research/drivers/dma-iommu.md) にあります。
 - 証明、QEMU、実機の確認を区別します。QEMU の起動成功を、LCD・キーボード・I2C・SPI・音声・カメラ・無線・USB・HDMI・GPU firmware の tryboot・実機の電源断の検証と扱いません。
 
 ## 9. リリースと版

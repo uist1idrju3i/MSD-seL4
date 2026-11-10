@@ -28,6 +28,7 @@
 
 ### 変更
 
+- DMA の方針を決めました（`research/drivers/dma-iommu.md`）。中央の DMA controller を使う device（SPI、SDHOST、I2S など）は、DMA server を通した DMA を既定にし、driver には DMA controller の capability を渡しません。自分で bus master になる device（USB、カメラ、VideoCore、mailbox）は device 自身の DMA を既定にします。PIO は、DMA server ができるまでの間と比較のために残します。AGENTS.md と sel4-capability-design スキルも合わせました。
 - PR の本文と完了報告で、確かめていないことを最初に書く運用を AGENTS.md に加え、PR template（`.github/pull_request_template.md`）を追加しました。
 
 - `main` の `publish-dev-image` は、来歴を検証できる同じ入力の image が公開済みなら build と push を省きます。Trivy の DB を `actions/cache` に置きます。
