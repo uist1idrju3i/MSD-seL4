@@ -22,6 +22,7 @@ MSD/seL4 の内部文書です。公開サイトは `docs/` にあります。�
 |---|---|
 | [sel4/verified-configuration.md](sel4/verified-configuration.md) | 検証済み構成、証明された性質、前提、対象外の部分 |
 | [sel4/verified-config-deviations.md](sel4/verified-config-deviations.md) | 検証済み構成からの差分の一覧 |
+| [sel4/verified-platforms.md](sel4/verified-platforms.md) | 形式検証済みのアーキテクチャと、platform ごとの SoC・CPU の一覧 |
 | [sel4/boot-chain.md](sel4/boot-chain.md) | Raspberry Pi firmware から seL4 までの起動経路と A/B 更新の可能性 |
 | [sel4/userland-frameworks.md](sel4/userland-frameworks.md) | userland の基盤（Microkit、CAmkES、capDL、rust-sel4、sDDF、LionsOS）の比較 |
 | [hardware/inventory.md](hardware/inventory.md) | CardputerZero の device と接続 |
