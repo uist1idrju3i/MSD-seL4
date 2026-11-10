@@ -34,6 +34,9 @@
 
 - README を読者別の入口、今の状態、試し方の構成に書き直しました。公開サイト（`docs/`）の開発状況、開発環境、設計の柱と、DeepWiki の設定（`.devin/wiki.json`）を、driver の調査、DMA の方針、Rust の smoke test、割り込み制御器の page の前提に合わせて更新しました。
 
+||||||| 4597c11
+- 開発用 image に rust-sel4 v6.0.0 の nightly（`nightly-2026-08-21`、`rust-src`、`llvm-tools-preview`）と libclang を入れ、CI の `kernel-verified` で Rust の root task を build して QEMU raspi3b で起動するようにしました。使っていなかった安定版の Rust 1.99.1、curl、xz-utils は image から外しました。`pins-check` は安定版の Rust の代わりに rust-sel4 の release を追います。
+
 - Build、Lint、Site の workflow は、`paths` の代わりに最初の `changes` job で変更されたファイルを判定し、入力が変わっていなければ残りの job を skip するようにしました。各 workflow の最後の `build-result`、`lint-result`、`site-result` は、skip のときも成功になるので、ruleset の required status checks に指定できます。判定は `.github/scripts/changed-files.py` で、試験は `tests/changed-files/run.sh` です。
 
 - research、README、CHANGELOG など文書だけを変えた PR と push では、Build、Lint、Site の workflow を動かさないようにしました（`paths` で、結果に影響するファイルの変更に限定）。agent-docs は文書を検査するので、常に動きます。CodeQL は、`main` の ruleset の code scanning の rule が結果を待つので、すべての PR と push で動かします。Build は週に 1 回の定期実行を加え、開発用 image の CVE の検査と QEMU の smoke test を続けます。

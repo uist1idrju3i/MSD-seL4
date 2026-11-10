@@ -29,7 +29,7 @@ WORKFLOW = f"""jobs:
 """
 DOCKERFILE = f"""FROM debian:trixie-slim@{DIGEST}
 ARG DEBIAN_SNAPSHOT=20261103T023120Z
-ARG RUST_TOOLCHAIN=1.99.1
+ARG RUST_SEL4_NIGHTLY=nightly-2026-08-21
 """
 
 
@@ -103,8 +103,8 @@ class ConsistencyTest(unittest.TestCase):
 
     def test_rejects_floating_rust(self) -> None:
         self.repo.write("docker/msd-sel4-dev.Dockerfile",
-                        DOCKERFILE.replace("1.99.1", "stable"))
-        self.assertTrue(any("RUST_TOOLCHAIN" in e for e in self.errors()))
+                        DOCKERFILE.replace("nightly-2026-08-21", "nightly"))
+        self.assertTrue(any("RUST_SEL4_NIGHTLY" in e for e in self.errors()))
 
     def test_rejects_deep_submodule(self) -> None:
         text = (self.repo.root / ".gitmodules").read_text()
@@ -131,9 +131,14 @@ class ParserTest(unittest.TestCase):
         self.assertNotIn(SHA_A, tags)
         self.assertEqual(tags["d" * 40], "16.0.0")
 
-    def test_rust_stable(self) -> None:
-        text = '[pkg.rust]\nversion = "1.99.1 (58cf8f9c3 2026-10-13)"\n'
-        self.assertEqual(check_pins.parse_rust_stable(text), "1.99.1")
+    def test_rust_sel4_version(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "projects/rust-smoke").mkdir(parents=True)
+            (root / "projects/rust-smoke/Cargo.toml").write_text(
+                'sel4 = { git = "https://github.com/seL4/rust-sel4", '
+                f'rev = "{SHA_A}" }} # v6.0.0\n')
+            self.assertEqual(check_pins.rust_sel4_version(root), "v6.0.0")
 
     def test_snapshot_age(self) -> None:
         self.assertEqual(check_pins.snapshot_status("20261103T023120Z", date(2026, 12, 3)), "最新")

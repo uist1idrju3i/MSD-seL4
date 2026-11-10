@@ -24,6 +24,9 @@ SEL4_INCLUDE_DIRS="$(printf "${smoke_build}/%s:" "${include_dirs[@]}")"
 export SEL4_INCLUDE_DIRS="${SEL4_INCLUDE_DIRS%:}"
 
 cd "${here}"
+# The development image keeps CARGO_HOME read-only; fetch git dependencies here.
+export CARGO_HOME="${here}/target/cargo-home"
+mkdir -p "${CARGO_HOME}"
 cargo fetch --locked
 sel4_manifest="$(cargo metadata --locked --format-version 1 |
     python3 -c 'import json,sys; print(next(p["manifest_path"] for p in json.load(sys.stdin)["packages"] if p["name"] == "sel4"))')"

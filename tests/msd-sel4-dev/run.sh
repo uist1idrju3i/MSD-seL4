@@ -15,7 +15,9 @@ for uid in 1000 1001 4242; do
 	docker run --rm --user "$uid:$uid" --env HOME=/home/builder "$image" bash -euc '
 		rustc --version >/dev/null
 		cargo --version >/dev/null
-		rustup target list --installed | grep -qx armv7a-none-eabi
+		rustup toolchain list | grep -q "^nightly-2026-08-21"
+		rustup +nightly-2026-08-21 component list --installed | grep -q "^rust-src"
+		test -n "$(find /usr/lib -name "libclang*.so*" -print -quit)"
 		arm-linux-gnueabi-gcc --version >/dev/null
 		touch "$HOME/.write-test"
 		cargo_home="$(mktemp -d)"
