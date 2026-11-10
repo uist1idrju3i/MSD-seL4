@@ -1,16 +1,10 @@
 name: CodeQL
 
-# Skip runs that cannot change this workflow's result (for example research-only PRs).
+# Runs on every PR: the main ruleset's code_scanning rule waits for CodeQL results.
 on:
   push:
     branches: [main]
-    paths:
-      - ".github/workflows/**"
-      - "**/*.py"
   pull_request:
-    paths:
-      - ".github/workflows/**"
-      - "**/*.py"
   schedule:
     - cron: "17 3 * * 1"
 
