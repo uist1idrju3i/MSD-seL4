@@ -78,7 +78,7 @@ flowchart LR
     SD --> UP["更新・storage"]
 ```
 
-各 driver は、自分の device の MMIO と IRQ の capability だけを持ちます。bus の上の device の driver（TCA8418 など）は、bus の driver への IPC だけで device に触れます。図の部品の分け方と root task は計画で、userland の基盤は未決定です。
+各 driver は、自分の device の MMIO と IRQ の capability だけを持ちます。bus の上の device の driver（TCA8418 など）は、bus の driver への IPC だけで device に触れます。userland の基盤は capDL と `capdl-loader-app` に決めました。図の部品の分け方は計画で、まだ実装していません。
 
 ## リポジトリの構成
 
