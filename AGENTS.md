@@ -97,6 +97,8 @@ Devin / Codex / Claude Code など、このリポジトリで作業するすべ�
 
 ```sh
 git submodule update --init --depth 1   # submodule の取得
+docker/msd-sel4-dev build                # 共通の開発環境の image を作る
+docker/msd-sel4-dev tools/build-verified-kernel.sh  # 検証済み構成の kernel を build し、構成を照合
 python3 .github/scripts/check-skills.py  # 指示とスキルの一覧・名前・リンクを検査
 python3 -m unittest discover -s tests/check-skills  # スキル検査のテスト
 python3 .agents/skills/yomiyasu/scripts/yomiyasu_lint.py <file>  # 日本語文書の候補検査

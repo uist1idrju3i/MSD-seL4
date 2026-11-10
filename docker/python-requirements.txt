@@ -1,0 +1,3 @@
+# Python packages for the seL4 build tools that Debian trixie does not ship.
+pyfdt==0.3 \
+    --hash=sha256:61601c2005ff394a25a6c84c6da2088bbf888328038400d27e4eeb1b04b9f4f0

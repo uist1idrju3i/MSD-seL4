@@ -1,0 +1,111 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  TRIVY_VERSION: "0.76.1"
+  TRIVY_DIGEST: "sha256:790fd66d1697395d8693d1acaa1ea702406a20f109b6fc7bac8db623eca6c06c"
+
+jobs:
+  kernel-verified:
+    name: kernel-verified
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          submodules: true
+
+      - name: Check shallow submodules
+        run: |
+          python3 - <<'PY'
+          import configparser
+          parser = configparser.ConfigParser()
+          parser.read(".gitmodules")
+          bad = [s for s in parser.sections() if parser[s].get("shallow") != "true"]
+          if not parser.sections() or bad:
+              raise SystemExit(f"submodules without shallow = true: {bad}")
+          PY
+
+      - name: Build development image
+        run: docker/msd-sel4-dev build
+
+      - name: Build seL4 kernel (ARM_bcm2837_verified)
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          docker/msd-sel4-dev tools/build-verified-kernel.sh | tee "$RUNNER_TEMP/kernel-verified.log"
+
+      - name: Record tool versions
+        run: |
+          set -euo pipefail
+          docker/msd-sel4-dev bash -c 'arm-linux-gnueabi-gcc --version | head -1; cmake --version | head -1; ninja --version; qemu-system-arm --version | head -1; rustc --version' \
+            | tee "$RUNNER_TEMP/tool-versions.txt"
+
+      - name: Scan development image
+        env:
+          TRIVY_IMAGE: ghcr.io/aquasecurity/trivy
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/trivy-cache"
+          docker run --rm \
+            --volume /var/run/docker.sock:/var/run/docker.sock \
+            --volume "$RUNNER_TEMP/trivy-cache:/root/.cache/trivy" \
+            "${TRIVY_IMAGE}:${TRIVY_VERSION}@${TRIVY_DIGEST}" \
+            image --scanners vuln --ignore-unfixed --severity CRITICAL \
+            --exit-code 1 --no-progress msd-sel4-dev:local
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: kernel-verified
+          path: |
+            build/kernel-verified/kernel.elf
+            build/kernel-verified/CMakeCache.txt
+            ${{ runner.temp }}/kernel-verified.log
+            ${{ runner.temp }}/tool-versions.txt
+          if-no-files-found: error
+
+  publish-dev-image:
+    name: publish-dev-image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: kernel-verified
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Build and push development image
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          repository=ghcr.io/uist1idrju3i/msd-sel4-dev
+          tag="$(docker/msd-sel4-dev tag)"
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$ACTOR" --password-stdin
+          MSD_SEL4_DEV_IMAGE="${repository}:${tag}" docker/msd-sel4-dev build
+          docker tag "${repository}:${tag}" "${repository}:latest"
+          docker push "${repository}:${tag}"
+          docker push "${repository}:latest"
+          docker logout ghcr.io
