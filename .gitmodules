@@ -1,0 +1,12 @@
+[submodule "vendor/seL4"]
+	path = vendor/seL4
+	url = https://github.com/seL4/seL4.git
+	shallow = true
+[submodule "vendor/yomiyasu"]
+	path = vendor/yomiyasu
+	url = https://github.com/nanaism/yomiyasu.git
+	shallow = true
+[submodule "vendor/m5stack-linux-dtoverlays"]
+	path = vendor/m5stack-linux-dtoverlays
+	url = https://github.com/m5stack/m5stack-linux-dtoverlays.git
+	shallow = true
