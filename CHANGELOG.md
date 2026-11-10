@@ -22,6 +22,10 @@
 
 - kernel 以外の形式検証の調査（`research/verification/beyond-kernel.md`）を加えました。README と公開サイトの設計の頁に、形式検証の範囲、検証していない部分、証明の前提を書き、README に Mermaid の図を加えました。「検証できる」の柱に、kernel の外での形式検証の方針を加えました。
 
+- 最小の root task と QEMU raspi3b の smoke test（`projects/smoke/`、`tools/qemu-smoke.sh`）を加えました。検証済み構成の kernel で root task が起動し、PL011 に出力できるかを確かめます。改変していない seL4 17.0.0 では kernel の起動処理（`vmrs fpexc`）で止まることを、[実験記録](research/experiments/2026-11-11-qemu-smoke.md)に残しました。QEMU での結果で、実機の結果ではありません。
+- `vendor/` に `sel4runtime`、`musllibc`、`util_libs` を、seL4 17.0.0 の manifest が指す commit で shallow submodule として加えました。`check-pins.py manifest` の照合の対象にも加えました。
+- IOMMU がないことの影響と、PIO・DMA の方針の案、QEMU で確かめられる範囲を `research/drivers/dma-iommu.md` に加えました。
+
 ### 変更
 
 - `main` の `publish-dev-image` は、来歴を検証できる同じ入力の image が公開済みなら build と push を省きます。Trivy の DB を `actions/cache` に置きます。

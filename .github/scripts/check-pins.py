@@ -23,7 +23,13 @@ DOCKERFILE = "docker/msd-sel4-dev.Dockerfile"
 DEPENDENCIES = "research/vendor/dependencies.md"
 SNAPSHOT_MAX_AGE_DAYS = 30
 # Submodules whose commit is defined by the seL4 release manifest.
-MANIFEST_PROJECTS = {"vendor/seL4": "seL4.git", "vendor/seL4_tools": "seL4_tools.git"}
+MANIFEST_PROJECTS = {
+    "vendor/seL4": "seL4.git",
+    "vendor/seL4_tools": "seL4_tools.git",
+    "vendor/sel4runtime": "sel4runtime.git",
+    "vendor/musllibc": "musllibc.git",
+    "vendor/util_libs": "util_libs.git",
+}
 
 USES = re.compile(r"^\s*-?\s*uses:\s*([^\s@#]+)@([^\s#]+)\s*(?:#\s*(\S+))?", re.M)
 IMAGE_PIN = re.compile(r"[\w./-]+:[\w.-]+@(sha256:[0-9a-f]+)")
