@@ -19,7 +19,7 @@ application、library、依存、toolchain を追加・更新するときは、�
 | GitHub Actions | workflow の `uses:` の commit SHA と `# vX.Y.Z` | 各 action の release と manifest。後続 major と Node.js runtime のサポートも確認 | 許可リスト（Actions permissions）との整合 |
 | CI tool（actionlint、ShellCheck、zizmor、hadolint など） | workflow または requirements の版と SHA-256 | 各 release と公開 checksum | 検査の既定値の変化 |
 
-新しい固定値を追加するときは、同じ PR で Dependabot か固定版の更新確認の監視対象に加えます。
+新しい固定値を追加するときは、同じ PR で Dependabot か固定版の更新確認（`.github/workflows/pins-check.yml`、`.github/scripts/check-pins.py` の `upstream_rows`）の監視対象に加えます。`vendor/seL4` を上げるときは、`vendor/seL4_tools` を `seL4/sel4test-manifest` の同じ tag の commit に合わせます。`check-pins.py manifest` が一致を検査します。
 
 ## 手順
 
