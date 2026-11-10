@@ -23,6 +23,8 @@
 - kernel 以外の形式検証の調査（`research/verification/beyond-kernel.md`）を加えました。README と公開サイトの設計の頁に、形式検証の範囲、検証していない部分、証明の前提を書き、README に Mermaid の図を加えました。「検証できる」の柱に、kernel の外での形式検証の方針を加えました。
 
 - 最小の root task と QEMU raspi3b の smoke test（`projects/smoke/`、`tools/qemu-smoke.sh`）を加えました。検証済み構成の kernel で root task が起動し、PL011 に出力できるかを確かめます。改変していない seL4 17.0.0 では kernel の起動処理（`vmrs fpexc`）で止まることを、[実験記録](research/experiments/2026-11-11-qemu-smoke.md)に残しました。QEMU での結果で、実機の結果ではありません。
+
+- seL4 の Rust（rust-sel4）の調査を `research/sel4/rust.md` と `research/sel4/rust-adoption.md` に加えました。`ARM_bcm2837_verified` とそれ以外の構成への対応状況、unsafe の境界、形式検証、toolchain、ライセンス、段階的な採用の案です。QEMU だけで動かす Rust の root task の実験（`projects/rust-smoke/`）を加え、`tools/qemu-smoke.sh` に root task の ELF を差し替える `MSD_SMOKE_ROOTSERVER` と、判定の文字列を変える `MSD_SMOKE_MARKER` を加えました。
 - `vendor/` に `sel4runtime`、`musllibc`、`util_libs` を、seL4 17.0.0 の manifest が指す commit で shallow submodule として加えました。`check-pins.py manifest` の照合の対象にも加えました。
 - IOMMU がないことの影響と、PIO・DMA の方針の案、QEMU で確かめられる範囲を `research/drivers/dma-iommu.md` に加えました。
 

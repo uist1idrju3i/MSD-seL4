@@ -25,6 +25,8 @@ MSD/seL4 の内部文書です。公開サイトは `docs/` にあります。�
 | [sel4/verified-platforms.md](sel4/verified-platforms.md) | 形式検証済みのアーキテクチャと、platform ごとの SoC・CPU の一覧 |
 | [sel4/boot-chain.md](sel4/boot-chain.md) | Raspberry Pi firmware から seL4 までの起動経路と A/B 更新の可能性 |
 | [sel4/userland-frameworks.md](sel4/userland-frameworks.md) | userland の基盤（Microkit、CAmkES、capDL、rust-sel4、sDDF、LionsOS）の比較、版、初期化の証明の範囲、推奨 |
+| [sel4/rust.md](sel4/rust.md) | seL4 の Rust（rust-sel4）の crate、`ARM_bcm2837_verified` とそれ以外の構成への対応状況 |
+| [sel4/rust-adoption.md](sel4/rust-adoption.md) | Rust の採用の検討（unsafe の境界、形式検証、toolchain、ライセンス、段階的な採用の案） |
 | [sel4/system-architecture.md](sel4/system-architecture.md) | 部品の分け方と、capability・IPC・IRQ・MMIO・DMA・fault の設計方針 |
 | [hardware/inventory.md](hardware/inventory.md) | CardputerZero の device と接続 |
 | [drivers/README.md](drivers/README.md) | driver ごとの状況 |

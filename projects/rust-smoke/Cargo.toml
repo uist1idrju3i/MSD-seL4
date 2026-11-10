@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: BSD-3-Clause
+[package]
+name = "rust-smoke"
+version = "0.1.0"
+edition = "2024"
+license = "BSD-3-Clause"
+publish = false
+
+[dependencies]
+sel4 = { git = "https://github.com/seL4/rust-sel4", rev = "c819c27b076130cba9821c4555f23773e4b0bffd" }
+sel4-root-task = { git = "https://github.com/seL4/rust-sel4", rev = "c819c27b076130cba9821c4555f23773e4b0bffd" }
+
+[profile.release]
+opt-level = "s"
+panic = "abort"
