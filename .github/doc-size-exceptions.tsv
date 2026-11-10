@@ -1,0 +1,3 @@
+# 文書サイズ検査の例外一覧。path<TAB>kind<TAB>max_bytes<TAB>reason の順。kind は upstream / legal / generated / record。
+# 例外は upstream 原文・法的文書・生成された証拠・記録の完全性を保つため分けられない文書に限る。
+# 未使用・存在しないパス・重複・理由なし・許容値超過は検査が失敗する。

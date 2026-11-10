@@ -10,3 +10,4 @@
 - AGENTS.md、エージェントスキル、DeepWiki の設定を追加しました。
 - 調査・設計の記録（`research/`）を追加しました。
 - 共通の開発環境（`docker/msd-sel4-dev`）と、検証済み構成の kernel を build する CI（`Build` workflow の `kernel-verified`）を追加しました。
+- CI（`agent-docs`、`Lint`、Advanced 設定の `CodeQL`）と Dependabot の設定を追加しました。
