@@ -17,8 +17,8 @@ Devin / Codex / Claude Code など、このリポジトリで作業するすべ�
 - ドキュメント、Issue、Pull Request のタイトルと本文、コミットメッセージは日本語で書きます。
 - コード、識別子、ファイル名は英語のままにします。ソースコード中のコメントは英語で書きます。
 - 日本語の文章を書いたら、推敲スキル「yomiyasu」で読みやすさを整えてください（§6）。
-- 追跡しているテキストファイルの文字は JIS X 0213:2004 の範囲に収めます。範囲外の文字は upstream 由来のファイルと原文の引用にだけ認めます。手順は「jisx0213-text」スキルに従います。
-- 文書は目的と読者で分け、一つのファイルが大きくなりすぎないようにします。UTF-8 で 20,000 バイトを超えたら分割を検討し、40,000 バイトを超えたら分割するか、理由付きの例外にします。手順は「document-structure」スキルに従います。
+- 追跡しているテキストファイルの文字は JIS X 0213:2004 の範囲に収めます。範囲外の文字は upstream 由来のファイルと原文の引用にだけ認め、`.github/jisx0213-allowlist.tsv` に理由を書きます。CI の `agent-docs` が検査します。手順は「jisx0213-text」スキルに従います。
+- 文書は目的と読者で分け、一つのファイルが大きくなりすぎないようにします。UTF-8 で 20,000 バイトを超えたら分割を検討し、40,000 バイトを超えたら分割するか、`.github/doc-size-exceptions.tsv` に理由付きの例外を書きます。手順は「document-structure」スキルに従います。
 - `docs/` は GitHub Pages で公開するサイト専用です。内部文書（調査、設計、実験記録）は `research/` に置きます。
 
 ## 3. 外部リポジトリ（vendor/）
@@ -101,6 +101,10 @@ docker/msd-sel4-dev build                # 共通の開発環境の image を作
 docker/msd-sel4-dev tools/build-verified-kernel.sh  # 検証済み構成の kernel を build し、構成を照合
 python3 .github/scripts/check-skills.py  # 指示とスキルの一覧・名前・リンクを検査
 python3 -m unittest discover -s tests/check-skills  # スキル検査のテスト
+python3 .github/scripts/check-jisx0213.py && tests/check-jisx0213/run.sh  # 文字の範囲
+python3 .github/scripts/check-links.py && tests/check-links/run.sh        # 文書のリンク
+python3 .github/scripts/check-doc-size.py && tests/check-doc-size/run.sh  # 文書の大きさ
+python3 .github/scripts/shellcheck-tracked.py                             # shell script
 python3 .agents/skills/yomiyasu/scripts/yomiyasu_lint.py <file>  # 日本語文書の候補検査
 python3 -m json.tool .devin/wiki.json >/dev/null  # DeepWiki 設定の JSON 検査
 git diff --check                        # 空白エラーの検査

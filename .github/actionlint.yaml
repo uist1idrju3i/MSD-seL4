@@ -1,0 +1,6 @@
+paths:
+  .github/workflows/*.yml:
+    ignore:
+      # actionlint does not yet recognize these GitHub-hosted runner labels.
+      - 'label "ubuntu-26.04" is unknown'
+      - 'label "ubuntu-26.04-arm" is unknown'

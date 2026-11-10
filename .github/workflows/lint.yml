@@ -1,0 +1,79 @@
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lint-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Lint workflows
+        env:
+          ACTIONLINT_IMAGE: rhysd/actionlint:1.7.12@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667
+        run: docker run --rm -v "$PWD:/repo" -w /repo "$ACTIONLINT_IMAGE" -color
+
+  shellcheck:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Check tracked shell scripts
+        run: |
+          shellcheck --version
+          python3 .github/scripts/shellcheck-tracked.py
+
+  zizmor:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install zizmor
+        run: |
+          python3 -m venv "$RUNNER_TEMP/zizmor"
+          "$RUNNER_TEMP/zizmor/bin/pip" install --only-binary=:all: --no-cache-dir \
+            --require-hashes -r .github/zizmor-requirements.txt
+
+      - name: Audit workflows offline
+        run: '"$RUNNER_TEMP/zizmor/bin/zizmor" --offline --format=github .github/workflows/'
+
+  dockerfile-lint:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Lint development Dockerfile
+        env:
+          HADOLINT_VERSION: 2.15.1
+          HADOLINT_DIGEST: sha256:9a3944b7fddcb947d1ffd90829ac1a6e5c30479223358f249d8b96c7d0019e27
+        run: |
+          docker run --rm -i \
+            -v "$PWD/.hadolint.yaml:/.config/hadolint.yaml:ro" \
+            "ghcr.io/hadolint/hadolint:v${HADOLINT_VERSION}-debian@${HADOLINT_DIGEST}" \
+            hadolint --config /.config/hadolint.yaml - < docker/msd-sel4-dev.Dockerfile
+
+      - name: Check Dockerfile build
+        run: docker build --check -f docker/msd-sel4-dev.Dockerfile .

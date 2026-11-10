@@ -1,0 +1,3 @@
+failure-threshold: warning
+ignored:
+  - DL3008 # Debian packages are pinned by the snapshot sources.

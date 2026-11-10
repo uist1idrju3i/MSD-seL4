@@ -1,0 +1,75 @@
+name: agent-docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: agent-docs-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+          persist-credentials: false
+
+      - name: 指示とスキルの一覧・名前・リンクを検査する
+        run: python3 .github/scripts/check-skills.py
+
+      - name: スキル検査のテスト
+        run: tests/check-skills/run.sh
+
+      - name: DeepWiki の設定が JSON として正しい
+        run: python3 -m json.tool .devin/wiki.json > /dev/null
+
+      - name: 実験記録が一覧から参照されている
+        run: |
+          status=0
+          for record in research/experiments/*.md; do
+            [ -e "$record" ] || continue
+            name="${record##*/}"
+            [ "$name" = README.md ] && continue
+            if ! grep -Fq "($name)" research/experiments/README.md; then
+              echo "::error file=$record::$name が research/experiments/README.md の一覧にありません。"
+              status=1
+            fi
+          done
+          exit "$status"
+
+      - name: 文書に個人環境のパスがない
+        run: |
+          if git grep -nE '/home/[A-Za-z0-9_-]+/|~/work/' -- \
+            docs research README.md RESEARCH.md AGENTS.md SECURITY.md CHANGELOG.md .agents ':!.agents/skills/yomiyasu'; then
+            echo "::error::文書から VM・個人環境のパスを削除してください。"
+            exit 1
+          fi
+
+      - name: 追跡しているテキストの文字が JIS X 0213 の範囲内にある
+        run: python3 .github/scripts/check-jisx0213.py
+
+      - name: JIS X 0213 検査のテスト
+        run: tests/check-jisx0213/run.sh
+
+      - name: 文書リンクと古いパスを検査する
+        run: python3 .github/scripts/check-links.py
+
+      - name: 文書リンク検査のテスト
+        run: tests/check-links/run.sh
+
+      - name: 文書の大きさが粒度の目安の範囲内にある
+        run: python3 .github/scripts/check-doc-size.py
+
+      - name: 文書サイズ検査のテスト
+        run: tests/check-doc-size/run.sh
+
+      - name: 空白エラーがない
+        run: git diff --check "$(git hash-object -t tree /dev/null)" HEAD -- . ':!vendor' ':!.github/scripts/data'
