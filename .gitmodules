@@ -14,3 +14,15 @@
 	path = vendor/seL4_tools
 	url = https://github.com/seL4/seL4_tools.git
 	shallow = true
+[submodule "vendor/sel4runtime"]
+	path = vendor/sel4runtime
+	url = https://github.com/seL4/sel4runtime.git
+	shallow = true
+[submodule "vendor/util_libs"]
+	path = vendor/util_libs
+	url = https://github.com/seL4/util_libs.git
+	shallow = true
+[submodule "vendor/musllibc"]
+	path = vendor/musllibc
+	url = https://github.com/seL4/musllibc.git
+	shallow = true

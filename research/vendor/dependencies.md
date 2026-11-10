@@ -6,6 +6,9 @@
 |---|---|---|---|---|
 | `vendor/seL4` | https://github.com/seL4/seL4 | tag `17.0.0`（commit `62e345c240a15671484530b4e6e069ce266c28d7`、2026-10-30） | kernel は主に GPL-2.0-only、`libsel4` は BSD-2-Clause | 製品の kernel。改変せずに build する |
 | `vendor/seL4_tools` | https://github.com/seL4/seL4_tools | `master` の `6493e0c6fab360eb81a8115a49c9ca7bc280c48a`（`seL4/sel4test-manifest` の tag `17.0.0` が指す commit） | elfloader-tool と cmake-tool は主に GPL-2.0-only、一部 BSD-2-Clause・BSD-3-Clause | seL4 を起動する elfloader と、root task を含む image を作る CMake の helper。改変せずに build する。tag がないため、seL4 の release の manifest が指す commit に合わせる |
+| `vendor/sel4runtime` | https://github.com/seL4/sel4runtime | `master` の `86489cf6efab9f314964e79468c036e9035394c7`（`seL4/sel4test-manifest` の tag `17.0.0` が指す commit、2025-03-17） | 主に BSD-2-Clause。一部 MIT（`memcpy.c`、`memset.c`、`elf.h` など）、文書は CC-BY-SA-4.0 | root task の起動処理（C runtime、BootInfo の受け取り）。smoke test の root task が使う。改変せずに build する |
+| `vendor/util_libs` | https://github.com/seL4/util_libs | `master` の `ef49a397b7044fc38b609a99a8c6265a97913b8e`（`seL4/sel4test-manifest` の tag `17.0.0` が指す commit、2026-10-27） | 使うのは `libcpio` だけで BSD-2-Clause。repository 全体には GPL などの部品もあるが build しない | elfloader が image の中の kernel と root task を CPIO から取り出すのに使う。改変せずに build する |
+| `vendor/musllibc` | https://github.com/seL4/musllibc | `sel4` の `b0005f86fecbd6d0257b15363a5b013446914265`（`seL4/sel4test-manifest` の tag `17.0.0` が指す commit） | MIT | seL4_tools の `base.cmake` が `find_package(musllibc REQUIRED)` で要求するため置く。この版は AArch32 の `KernelArmTLSReg=tpidruro` だけに対応し、検証済み構成の `tpidru` と合わないので、root task には link しない（[実験記録](../experiments/2026-11-11-qemu-smoke.md)） |
 | `vendor/yomiyasu` | https://github.com/nanaism/yomiyasu | tag `v2.5.0`（commit `29d67ccb05e370b5958d72920a9cd1aa829dee80`） | MIT | 日本語文書の推敲スキル |
 | `vendor/m5stack-linux-dtoverlays` | https://github.com/m5stack/m5stack-linux-dtoverlays | `main` の `4f7aeee9fc103ebb03d22cac476bb191ecfb321e`（2026-11-05） | GPL-2.0 WITH Linux-syscall-note（`COPYING`） | CardputerZero の配線と初期化の手順を読む資料。コードは写さない |
 
@@ -16,7 +19,7 @@
 | U-Boot | 今は加えない | rpi3 の公式手順は U-Boot から elfloader を起動するが、既定の U-Boot は elfloader の cache の扱いと合わない（[起動経路](../sel4/boot-chain.md)）。GPU firmware の `kernel=` で elfloader を直接起動できれば不要になり、信頼する部品も減る。直接起動の実験で失敗したときに、版と cache の対処を決めて加える |
 | Raspberry Pi の GPU firmware（`bootcode.bin`、`start*.elf`、`fixup*.dat`） | submodule にしない | `raspberrypi/firmware` は履歴が数十 GB あり、shallow でも Linux kernel の image を含む。起動 image を作る段階で、release の tag と各ファイルの SHA-256 を固定して取得する。版は MSD/Linux の Buildroot が使う commit（`063bcab6`）を起点に比べる |
 | Raspberry Pi の Linux kernel（`raspberrypi/linux`） | submodule にしない | 大きく、GPL。BCM2837 の周辺回路の driver を読む資料として、commit を固定した URL で参照する |
-| seL4 の userland（`seL4_libs`、`sel4runtime`、`musllibc`、`util_libs`、capDL など） | userland の基盤を決めた後に加える | どれを使うかが基盤（[userland の基盤](../sel4/userland-frameworks.md)）で変わる。加えるときは、`sel4test-manifest` などの tag `17.0.0` が指す commit に合わせる |
+| seL4 の userland の残り（`seL4_libs`、capDL の tool と `capdl-loader-app` など） | 必要になった時点で加える | userland の基盤は B（[userland の基盤](../sel4/userland-frameworks.md)）に決まった。smoke test の root task は `sel4runtime` だけを link する。加えるときは、`sel4test-manifest` などの tag `17.0.0` が指す commit に合わせる |
 
 ## CardputerZero の公式の上流
 

@@ -28,6 +28,7 @@ MSD/seL4 の内部文書です。公開サイトは `docs/` にあります。�
 | [sel4/system-architecture.md](sel4/system-architecture.md) | 部品の分け方と、capability・IPC・IRQ・MMIO・DMA・fault の設計方針 |
 | [hardware/inventory.md](hardware/inventory.md) | CardputerZero の device と接続 |
 | [drivers/README.md](drivers/README.md) | driver ごとの状況 |
+| [drivers/dma-iommu.md](drivers/dma-iommu.md) | IOMMU がないことの影響、PIO と DMA の方針の案、QEMU で確かめられる範囲 |
 | [security/threat-model.md](security/threat-model.md) | 脅威と、seL4 で防げる範囲・防げない範囲 |
 | [verification/layers.md](verification/layers.md) | 証明・host・QEMU・実機の確認の階層 |
 | [vendor/dependencies.md](vendor/dependencies.md) | 依存の固定版、ライセンス、採用の理由 |

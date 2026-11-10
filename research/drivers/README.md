@@ -4,6 +4,8 @@
 
 driver はすべて seL4 のユーザー空間に自作します。driver ごとに「sel4-driver」スキルで調査し、計画を利用者が確認してから実装します。状態は「未着手」「調査済み」「実装済み（QEMU）」「実装済み（実機確認）」のどれかです。
 
+DMA と PIO の選び方、IOMMU がないことの影響、QEMU で確かめられる範囲は [dma-iommu.md](dma-iommu.md) にまとめています。
+
 | driver | 依存する driver | 状態 |
 |---|---|---|
 | UART（mini UART、PL011） | GPIO、clock | 未着手 |

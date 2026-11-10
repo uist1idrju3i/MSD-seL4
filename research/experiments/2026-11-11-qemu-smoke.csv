@@ -1,0 +1,4 @@
+run_id,variant,repeat,metric,value,unit,valid,note
+smoke-base-1,unmodified-17.0.0,1,smoke_ok,0,bool,true,undefined instruction at init_kernel vmrs fpexc
+smoke-base-1,unmodified-17.0.0,1,pl011_bytes,0,byte,true,no output from root task
+smoke-patched-1,boot-c-cpacr-patch,1,smoke_ok,1,bool,true,root task printed OK
