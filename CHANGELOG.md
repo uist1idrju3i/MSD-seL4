@@ -32,6 +32,8 @@
 
 ### 変更
 
+- Build、Lint、Site の workflow は、`paths` の代わりに最初の `changes` job で変更されたファイルを判定し、入力が変わっていなければ残りの job を skip するようにしました。各 workflow の最後の `build-result`、`lint-result`、`site-result` は、skip のときも成功になるので、ruleset の required status checks に指定できます。判定は `.github/scripts/changed-files.py` で、試験は `tests/changed-files/run.sh` です。
+
 - research、README、CHANGELOG など文書だけを変えた PR と push では、Build、Lint、Site の workflow を動かさないようにしました（`paths` で、結果に影響するファイルの変更に限定）。agent-docs は文書を検査するので、常に動きます。CodeQL は、`main` の ruleset の code scanning の rule が結果を待つので、すべての PR と push で動かします。Build は週に 1 回の定期実行を加え、開発用 image の CVE の検査と QEMU の smoke test を続けます。
 
 - DMA の方針を決めました（`research/drivers/dma-iommu.md`）。中央の DMA controller を使う device（SPI、SDHOST、I2S など）は、DMA server を通した DMA を既定にし、driver には DMA controller の capability を渡しません。自分で bus master になる device（USB、カメラ、VideoCore、mailbox）は device 自身の DMA を既定にします。PIO は、DMA server ができるまでの間と比較のために残します。AGENTS.md と sel4-capability-design スキルも合わせました。

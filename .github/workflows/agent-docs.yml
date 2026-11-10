@@ -80,5 +80,8 @@ jobs:
       - name: 固定値の検査のテスト
         run: tests/check-pins/run.sh
 
+      - name: 変更ファイルの判定のテスト
+        run: tests/changed-files/run.sh
+
       - name: 空白エラーがない
         run: git diff --check "$(git hash-object -t tree /dev/null)" HEAD -- . ':!vendor' ':!.github/scripts/data'

@@ -1,29 +1,12 @@
 name: Build
 
-# Skip runs that cannot change this workflow's result (for example research-only PRs).
+# The changes job skips the other jobs when no input of this workflow changed
+# (for example research-only PRs); the result job gives one stable check.
 on:
   push:
     branches:
       - main
-    paths:
-      - ".github/workflows/build.yml"
-      - ".gitmodules"
-      - "vendor/**"
-      - "docker/**"
-      - "tools/**"
-      - "projects/**"
-      - "patches/**"
-      - "tests/msd-sel4-dev/**"
   pull_request:
-    paths:
-      - ".github/workflows/build.yml"
-      - ".gitmodules"
-      - "vendor/**"
-      - "docker/**"
-      - "tools/**"
-      - "projects/**"
-      - "patches/**"
-      - "tests/msd-sel4-dev/**"
   # Weekly run keeps the image CVE scan and QEMU smoke test current.
   schedule:
     - cron: "23 4 * * 1"
@@ -40,8 +23,32 @@ env:
   TRIVY_DIGEST: "sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb"
 
 jobs:
+  changes:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      relevant: ${{ steps.check.outputs.relevant }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+
+      - name: Check whether the inputs of this workflow changed
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 .github/scripts/changed-files.py
+          '.github/workflows/build.yml' '.gitmodules' 'vendor/**' 'docker/**' 'tools/**' 'projects/**' 'patches/**' 'tests/msd-sel4-dev/**'
+
   kernel-verified:
     name: kernel-verified
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
     runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
@@ -132,8 +139,8 @@ jobs:
 
   publish-dev-image:
     name: publish-dev-image
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: kernel-verified
+    needs: [changes, kernel-verified]
+    if: needs.changes.outputs.relevant == 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
@@ -188,3 +195,23 @@ jobs:
       - name: Log out of GHCR
         if: always()
         run: docker logout ghcr.io
+
+  build-result:
+    name: build-result
+    if: always()
+    needs: [changes, kernel-verified, publish-dev-image]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Check job results
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          printf 'results: %s\n' "$RESULTS"
+          for result in $RESULTS; do
+            case "$result" in
+              success | skipped) ;;
+              *) exit 1 ;;
+            esac
+          done

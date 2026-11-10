@@ -1,29 +1,12 @@
 name: Lint
 
-# Skip runs that cannot change this workflow's result (for example research-only PRs).
+# The changes job skips the other jobs when no input of this workflow changed
+# (for example research-only PRs); the result job gives one stable check.
 on:
   pull_request:
-    paths:
-      - ".github/workflows/**"
-      - ".github/zizmor-requirements.txt"
-      - ".github/scripts/shellcheck-tracked.py"
-      - ".hadolint.yaml"
-      - "**/*.sh"
-      - "docker/**"
-      - "tools/**"
-      - "tests/**"
   push:
     branches:
       - main
-    paths:
-      - ".github/workflows/**"
-      - ".github/zizmor-requirements.txt"
-      - ".github/scripts/shellcheck-tracked.py"
-      - ".hadolint.yaml"
-      - "**/*.sh"
-      - "docker/**"
-      - "tools/**"
-      - "tests/**"
   workflow_dispatch:
 
 permissions:
@@ -34,7 +17,31 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  changes:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      relevant: ${{ steps.check.outputs.relevant }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+
+      - name: Check whether the inputs of this workflow changed
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: >-
+          python3 .github/scripts/changed-files.py
+          '.github/workflows/**' '.github/zizmor-requirements.txt' '.github/scripts/shellcheck-tracked.py' '.hadolint.yaml' '**/*.sh' 'docker/**' 'tools/**' 'tests/**'
+
   actionlint:
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
     runs-on: ubuntu-26.04
     timeout-minutes: 10
     steps:
@@ -48,6 +55,8 @@ jobs:
         run: docker run --rm -v "$PWD:/repo" -w /repo "$ACTIONLINT_IMAGE" -color
 
   shellcheck:
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
     runs-on: ubuntu-26.04
     timeout-minutes: 10
     steps:
@@ -61,6 +70,8 @@ jobs:
           python3 .github/scripts/shellcheck-tracked.py
 
   zizmor:
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
     runs-on: ubuntu-26.04
     timeout-minutes: 10
     steps:
@@ -78,6 +89,8 @@ jobs:
         run: '"$RUNNER_TEMP/zizmor/bin/zizmor" --offline --format=github .github/workflows/'
 
   dockerfile-lint:
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
     runs-on: ubuntu-26.04
     timeout-minutes: 10
     steps:
@@ -97,3 +110,23 @@ jobs:
 
       - name: Check Dockerfile build
         run: docker build --check -f docker/msd-sel4-dev.Dockerfile .
+
+  lint-result:
+    name: lint-result
+    if: always()
+    needs: [changes, actionlint, shellcheck, zizmor, dockerfile-lint]
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Check job results
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          printf 'results: %s\n' "$RESULTS"
+          for result in $RESULTS; do
+            case "$result" in
+              success | skipped) ;;
+              *) exit 1 ;;
+            esac
+          done
