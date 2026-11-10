@@ -15,7 +15,13 @@ if [[ ! -f "${sel4_dir}/configs/ARM_bcm2837_verified.cmake" ]]; then
 fi
 
 rm -rf -- "${build_dir}"
-cmake -S "${sel4_dir}" -B "${build_dir}" -G Ninja \
+# patches/seL4 is applied to a copy; MSD_SEL4_PATCHES=none builds vendor/seL4 as is.
+src_dir="${sel4_dir}"
+if [[ "${MSD_SEL4_PATCHES:-apply}" != none ]]; then
+    src_dir="${build_dir}-sel4-src"
+    "${repo_root}/tools/prepare-sel4-source.sh" "${src_dir}"
+fi
+cmake -S "${src_dir}" -B "${build_dir}" -G Ninja \
     -DCROSS_COMPILER_PREFIX="${cross_prefix}" \
     -DCMAKE_TOOLCHAIN_FILE="${sel4_dir}/gcc.cmake" \
     -C "${sel4_dir}/configs/ARM_bcm2837_verified.cmake"

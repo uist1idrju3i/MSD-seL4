@@ -30,7 +30,7 @@ Devin / Codex / Claude Code など、このリポジトリで作業するすべ�
 ## 4. ライセンス
 
 - 本リポジトリのコードと文書は BSD-3-Clause です（[LICENSE](LICENSE)）。新しいソースファイルの先頭に `SPDX-License-Identifier: BSD-3-Clause` を書きます。
-- seL4 kernel（GPL-2.0-only）は改変せず、別のバイナリとして組み合わせます。`libsel4`、Microkit、sDDF などの BSD-2-Clause のコードを取り込むときは、元の著作権表示とライセンスを残します。
+- seL4 kernel（GPL-2.0-only）は別のバイナリとして組み合わせます。kernel の不具合を直す patch（`patches/seL4/`）は kernel と同じ GPL-2.0-only とし、先頭に `SPDX-License-Identifier: GPL-2.0-only` を書きます。`libsel4`、Microkit、sDDF などの BSD-2-Clause のコードを取り込むときは、元の著作権表示とライセンスを残します。
 - Linux kernel、m5stack-linux-dtoverlays など GPL のコードは、ハードウェアの仕様を読む資料として参照するだけにし、本リポジトリへ写しません。GPL のコードを移植する必要が出たら、作業の前に利用者の判断を得ます。
 
 ## 5. エージェントスキル
@@ -80,7 +80,7 @@ Devin / Codex / Claude Code など、このリポジトリで作業するすべ�
 ## 8. seL4 の規則
 
 - 製品の kernel は、seL4 の検証済み構成 `ARM_bcm2837_verified`（AArch32、EL1、単一コア、FPU の context switch なし、MCS なし）を既定とします。CMake の設定をこの構成から変えるときは、理由、証明への影響、戻す条件を [検証済み構成からの差分](research/sel4/verified-config-deviations.md) に書き、利用者の判断を得てから入れます。手順は「sel4-verified-config」スキルに従います。
-- `vendor/seL4` の kernel は改変しません。platform の設定（DTS の overlay、memory の範囲など）は、vendor を編集せずに渡す方法を使います。
+- `vendor/seL4` は編集しません。kernel の source を変える必要があるときは、patch を `patches/seL4/` に置き、`tools/prepare-sel4-source.sh` で build 時の写しに当てます。理由、証明への影響、戻す条件を [検証済み構成からの差分](research/sel4/verified-config-deviations.md) に書き、利用者の判断を得てから入れます。上流が直したら、その版を取り込んで patch を外します。platform の設定（DTS の overlay、memory の範囲など）は、vendor を編集せずに渡す方法を使います。
 - 証明の範囲を正確に書きます。kernel の証明は、kernel の起動処理、SMMU/IOMMU、debug・printing、ハードウェア、firmware、boot loader、ユーザー空間の driver とアプリケーションを含みません。「seL4 を使っているので安全」「検証済みのシステム」とは書きません。
 - システムは保護ドメインに分け、各部品に必要な capability だけを静的に渡します。実行時に権限を増やす部品を作りません。部品の分割と capability の表は「sel4-capability-design」スキルに従います。
 - device の driver はユーザー空間の独立した保護ドメインとして自作します。driver ごとに深い調査と深い計画を立て、利用者の確認を得てから実装します。手順は「sel4-driver」スキルに従います。

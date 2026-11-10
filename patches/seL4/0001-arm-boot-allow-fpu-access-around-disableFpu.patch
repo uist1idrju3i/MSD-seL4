@@ -1,0 +1,28 @@
+SPDX-License-Identifier: GPL-2.0-only
+
+arm: allow cp10/cp11 access around disableFpu() during boot
+
+With CONFIG_HAVE_FPU disabled (as in ARM_bcm2837_verified), seL4 17.0.0
+fpsimd_HWCapTest() restores CPACR to CPACR_DEFAULT, which denies cp10 and
+cp11. init_cpu() then calls disableFpu(), which reads FPEXC with vmrs and
+takes an Undefined Instruction exception. Grant cp10/cp11 access only for
+the disableFpu() call and restore CPACR_DEFAULT afterwards.
+
+Applied by tools/prepare-sel4-source.sh to a copy of vendor/seL4.
+Remove this patch once upstream seL4 fixes the issue.
+See research/sel4/verified-config-deviations.md.
+
+--- a/src/arch/arm/kernel/boot.c
++++ b/src/arch/arm/kernel/boot.c
+@@ -239,7 +239,11 @@
+ 
+     /* Disable FPU to avoid channels where a platform has an FPU but doesn't make use of it */
+     if (haveHWFPU) {
++        setCPACR(CPACR_FPU_ENABLE);
++        isb();
+         disableFpu();
++        setCPACR(CPACR_DEFAULT);
++        isb();
+     }
+ 
+ #ifdef CONFIG_HAVE_FPU

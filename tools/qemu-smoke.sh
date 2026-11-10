@@ -10,8 +10,17 @@ timeout_s="${QEMU_TIMEOUT:-30}"
 cross_prefix="${CROSS_COMPILER_PREFIX:-arm-linux-gnueabi-}"
 
 rm -rf "${build_dir}"
+# MSD_SEL4_PATCHES=none builds the unmodified vendor/seL4 (negative control).
+if [[ -z "${KERNEL_PATH:-}" ]]; then
+    if [[ "${MSD_SEL4_PATCHES:-apply}" == none ]]; then
+        KERNEL_PATH="${repo_root}/vendor/seL4"
+    else
+        KERNEL_PATH="${build_dir}/sel4-src"
+        "${repo_root}/tools/prepare-sel4-source.sh" "${KERNEL_PATH}"
+    fi
+fi
 cmake -S "${repo_root}/projects/smoke" -B "${build_dir}" -G Ninja \
-    -DKERNEL_PATH="${KERNEL_PATH:-${repo_root}/vendor/seL4}" \
+    -DKERNEL_PATH="${KERNEL_PATH}" \
     -DCROSS_COMPILER_PREFIX="${cross_prefix}" \
     -DCMAKE_TOOLCHAIN_FILE="${repo_root}/vendor/seL4/gcc.cmake"
 ninja -C "${build_dir}"

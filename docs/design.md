@@ -17,6 +17,8 @@ permalink: /design/
 
 MSD/seL4 は、seL4 の検証済み構成 `ARM_bcm2837_verified`（AArch32、単一コア）で kernel を build します。seL4 の [Verified Configurations](https://docs.sel4.systems/projects/sel4/verified-configurations.html) によると、この構成では kernel の機能正当性、完全性と可用性、機密性、バイナリ正当性、capDL による初期化のモデルレベルの機能正当性が証明されています。
 
+MSD/seL4 は、seL4 17.0.0 の起動処理の不具合を直す patch を 1 つ当てて build します。証明とバイナリ正当性の検証は改変なしの source を対象にしており、patch を当てた source では実行していません。
+
 証明は、kernel の起動処理、SMMU/IOMMU、debug と printing、ハードウェア、firmware、boot loader、ユーザー空間の driver とアプリケーションを扱いません。また、ハードウェアが正しく動くことを前提にします。MSD/seL4 を「全体が検証済みのシステム」とは呼びません。
 
 ## 形式検証していない部分と前提

@@ -123,3 +123,7 @@ root task が frame を作れたことから、次の 2 点も QEMU で確かめ
 ## ログ
 
 ログはリポジトリに入れていません。上の手順で再生成できます。例外の追跡は、`tools/qemu-smoke.sh` の QEMU の引数に `-d int,guest_errors,unimp -D <file>` を足して取りました。
+
+## その後の判断（2026-11-11）
+
+利用者は、上流の seL4 に Issue を出さず、patch をこのリポジトリに置く運用に決めました。上の「`boot.c` の 1 か所を変えた写し」と同じ変更を `patches/seL4/0001-arm-boot-allow-fpu-access-around-disableFpu.patch` に置き、`tools/prepare-sel4-source.sh` で build 時の写しに当てます。同じ入力で build し直すと、kernel と image の SHA-256 は上の表と一致しました。運用と戻す条件は [検証済み構成からの差分](../sel4/verified-config-deviations.md) に書きました。

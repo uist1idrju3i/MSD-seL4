@@ -61,6 +61,11 @@ jobs:
           mkdir -p build
           docker/msd-sel4-dev tools/build-verified-kernel.sh | tee "$RUNNER_TEMP/kernel-verified.log"
 
+      - name: Boot smoke root task on QEMU raspi3b (QEMU only)
+        run: |
+          set -euo pipefail
+          docker/msd-sel4-dev tools/qemu-smoke.sh | tee "$RUNNER_TEMP/qemu-smoke.log"
+
       - name: Record tool versions
         run: |
           set -euo pipefail
@@ -96,6 +101,9 @@ jobs:
           path: |
             build/kernel-verified/kernel.elf
             build/kernel-verified/CMakeCache.txt
+            build/kernel-verified-sel4-src/MSD_SEL4_PATCHES
+            build/smoke/pl011.log
+            ${{ runner.temp }}/qemu-smoke.log
             ${{ runner.temp }}/kernel-verified.log
             ${{ runner.temp }}/tool-versions.txt
           if-no-files-found: error
