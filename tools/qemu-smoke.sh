@@ -24,6 +24,15 @@ cmake -S "${repo_root}/projects/smoke" -B "${build_dir}" -G Ninja \
     -DCROSS_COMPILER_PREFIX="${cross_prefix}" \
     -DCMAKE_TOOLCHAIN_FILE="${repo_root}/vendor/seL4/gcc.cmake"
 ninja -C "${build_dir}"
+# MSD_SMOKE_ROOTSERVER replaces the C root task with a prebuilt ELF (for
+# example the Rust experiment in projects/rust-smoke) before packing the image.
+marker="${MSD_SMOKE_MARKER:-MSD-seL4 smoke: OK}"
+if [[ -n "${MSD_SMOKE_ROOTSERVER:-}" ]]; then
+    cp "${MSD_SMOKE_ROOTSERVER}" "${build_dir}/smoke"
+    touch "${build_dir}/smoke"
+    ninja -C "${build_dir}"
+fi
+sha256sum "${build_dir}/smoke" "${build_dir}/kernel/kernel.elf"
 
 image="${build_dir}/images/smoke-image-arm-bcm2837"
 cache="${build_dir}/CMakeCache.txt"
@@ -48,5 +57,5 @@ timeout "${timeout_s}" qemu-system-aarch64 -M raspi3b -nographic -monitor none \
     -device "loader,file=${image}"
 set -e
 cat "${log}"
-grep -q 'MSD-seL4 smoke: OK' "${log}"
+grep -qF "${marker}" "${log}"
 echo "qemu-smoke: passed (QEMU raspi3b only; not a hardware result)"

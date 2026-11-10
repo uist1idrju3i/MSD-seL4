@@ -1,0 +1,15 @@
+run_id,variant,repeat,metric,value,unit,valid,note
+rust-patched-1,rust-patched,1,smoke_ok,1,bool,true,pl011 sha256 prefix 5f9afbeb7b640748
+rust-patched-2,rust-patched,2,smoke_ok,1,bool,true,pl011 sha256 prefix 5f9afbeb7b640748
+rust-patched-3,rust-patched,3,smoke_ok,1,bool,true,pl011 sha256 prefix 5f9afbeb7b640748
+rust-patched-4,rust-patched,4,smoke_ok,1,bool,true,pl011 sha256 prefix 5f9afbeb7b640748
+rust-patched-5,rust-patched,5,smoke_ok,1,bool,true,pl011 sha256 prefix 5f9afbeb7b640748
+rust-unpatched-1,rust-unmodified-17.0.0,1,smoke_ok,0,bool,true,kernel stops in boot before root task
+rust-negative-1,rust-patched-default-marker,1,smoke_ok,0,bool,true,qemu-smoke exit 1; marker mismatch as expected
+rust-repro-1,rust-patched-rebuilt,1,smoke_ok,1,bool,true,elf 1a6922a0 image 9f6a0275
+size-c-1,c-smoke,1,text,5587,byte,true,arm-linux-gnueabi-size
+size-c-1,c-smoke,1,bss,98388,byte,true,arm-linux-gnueabi-size
+size-c-1,c-smoke,1,stripped_elf,13052,byte,true,arm-linux-gnueabi-strip
+size-rust-1,rust-smoke,1,text,23796,byte,true,arm-linux-gnueabi-size; opt-level s
+size-rust-1,rust-smoke,1,bss,66024,byte,true,arm-linux-gnueabi-size
+size-rust-1,rust-smoke,1,stripped_elf,24912,byte,true,arm-linux-gnueabi-strip

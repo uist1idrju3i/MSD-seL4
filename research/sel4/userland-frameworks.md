@@ -42,6 +42,7 @@ D1 で AArch32 の検証済み構成を選んだため、userland の基盤は A
 ## 推奨と決定（推奨の理由は推測を含む）
 
 - **B を推奨します。** 初期化の証明がある `capdl-loader-app` を root task とし、system の記述を capDL で静的に固定します。capability の分配は capDL の仕様から機械的に確かめられます（「部品 X が資源 Y に届くか」）。
+- Rust の対応状況と採用の検討は [rust.md](rust.md) と [rust-adoption.md](rust-adoption.md) にあります。
 - 部品は C を基本とし、証明や検査の道具（Frama-C、CBMC、Kani、Verus）との相性を形式検証の調査（`research/verification/`）で比べてから、Rust を使う範囲を決めます。
 - A は、B の generator が大きくなりすぎた場合の代わりとして残します。CAmkES の connector の設計は参考にします。
 - sDDF の設計（方向が決まった共有メモリの queue と通知、driver と virtualiser の分離）は、コードを使わずに考え方として取り入れます。
