@@ -3,7 +3,8 @@
 FROM debian:trixie-slim@sha256:a72b4433de1cf7d6bae0c4cee74d0547f58601a643b3375f070c51600d63b6b2
 
 ARG DEBIAN_SNAPSHOT=20261109T224401Z
-ARG RUST_TOOLCHAIN=1.99.1
+# rust-sel4 pins its own nightly; keep it equal to projects/rust-smoke/rust-toolchain.toml.
+ARG RUST_SEL4_NIGHTLY=nightly-2026-08-21
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 LABEL org.opencontainers.image.source="https://github.com/uist1idrju3i/MSD-seL4" \
@@ -21,18 +22,17 @@ RUN rm -f /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.
         > /etc/apt/sources.list.d/debian.sources \
     && apt-get -o Acquire::Retries=5 update \
     && apt-get -o Acquire::Retries=5 install -y --no-install-recommends \
-        bash \
         build-essential \
         ca-certificates \
         cmake \
         cpio \
-        curl \
         device-tree-compiler \
         file \
         gcc-aarch64-linux-gnu \
         g++-arm-linux-gnueabi \
         gcc-arm-linux-gnueabi \
         git \
+        libclang-dev \
         libxml2-utils \
         ninja-build \
         python3 \
@@ -47,7 +47,6 @@ RUN rm -f /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.
         python3-yaml \
         qemu-system-arm \
         rustup \
-        xz-utils \
     && rm -rf /var/lib/apt/lists/* /tmp/debian.sources
 
 COPY docker/python-requirements.txt /tmp/python-requirements.txt
@@ -62,9 +61,10 @@ RUN python3 -m venv --system-site-packages /opt/sel4-python \
 ENV RUSTUP_HOME=/opt/rust/rustup \
     CARGO_HOME=/opt/rust/cargo \
     PATH=/opt/sel4-python/bin:/opt/rust/cargo/bin:${PATH}
-RUN rustup toolchain install "${RUST_TOOLCHAIN}" --profile minimal \
-        --target armv7a-none-eabi --target aarch64-unknown-none \
-    && rustup default "${RUST_TOOLCHAIN}" \
+# rust-sel4 builds core with -Z build-std, so no prebuilt target is installed.
+RUN rustup toolchain install "${RUST_SEL4_NIGHTLY}" --profile minimal \
+        --component rust-src --component llvm-tools-preview \
+    && rustup default "${RUST_SEL4_NIGHTLY}" \
     && chmod -R a+rX /opt/rust \
     && rustc --version \
     && cmake --version | head -1 \

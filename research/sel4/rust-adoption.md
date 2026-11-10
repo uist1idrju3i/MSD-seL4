@@ -56,7 +56,7 @@ rust-sel4 の crate 自体（`sel4`、`sel4-root-task` など）は形式検証�
 ## toolchain と CI
 
 - **固定**: release `v6.0.0` の commit を `rev` で指定し（tag は付け替えられるため）、`Cargo.lock` をコミットして `--locked` で build します。nightly は release の `rust-toolchain.toml` と同じ版にします。違う nightly では build できないことを実測しました（[実験記録](../experiments/2026-11-11-rust-root-task-qemu.md)の失敗した試行）。
-- **開発用 image**: 今の `docker/msd-sel4-dev` は安定版の Rust 1.99.1 だけを持ち、nightly と `rust-src`、libclang がありません。Rust の部品を製品に入れる段階で、nightly と libclang を image に加えるかを、image の大きさと build 時間を測ってから決めます。それまで Rust の build は CI に入れません。
+- **開発用 image**: 2026-11-11 に、`docker/msd-sel4-dev` へ rust-sel4 の nightly、`rust-src`、libclang を加え、使っていなかった安定版の Rust を外しました。CI の `kernel-verified` は、Rust の root task を build して QEMU で起動します（QEMU だけ）。
 - **更新の追跡**: crates.io にないため、Dependabot の cargo では rust-sel4 の新しい release を追えません。`pins-check` の対象に rust-sel4 の release と nightly の版を加えるかを、採用を決めるときに検討します。更新の手順は「vendor-update」スキルに従います。
 - **上流の CI**: rust-sel4 は Nix で worlds を組み、Kani と Verus も build します。本リポジトリでは Nix を使わず、CMake の build が作る header を `SEL4_INCLUDE_DIRS` で渡します。
 

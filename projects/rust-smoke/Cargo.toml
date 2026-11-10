@@ -7,8 +7,8 @@ license = "BSD-3-Clause"
 publish = false
 
 [dependencies]
-sel4 = { git = "https://github.com/seL4/rust-sel4", rev = "c819c27b076130cba9821c4555f23773e4b0bffd" }
-sel4-root-task = { git = "https://github.com/seL4/rust-sel4", rev = "c819c27b076130cba9821c4555f23773e4b0bffd" }
+sel4 = { git = "https://github.com/seL4/rust-sel4", rev = "c819c27b076130cba9821c4555f23773e4b0bffd" } # v6.0.0
+sel4-root-task = { git = "https://github.com/seL4/rust-sel4", rev = "c819c27b076130cba9821c4555f23773e4b0bffd" } # v6.0.0
 
 [profile.release]
 opt-level = "s"

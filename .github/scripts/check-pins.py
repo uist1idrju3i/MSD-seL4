@@ -19,6 +19,7 @@ from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[2]
+RUST_SMOKE_TOOLCHAIN = "projects/rust-smoke/rust-toolchain.toml"
 DOCKERFILE = "docker/msd-sel4-dev.Dockerfile"
 DEPENDENCIES = "research/vendor/dependencies.md"
 SNAPSHOT_MAX_AGE_DAYS = 30
@@ -120,8 +121,14 @@ def consistency(root: Path) -> list[str]:
         errors.append(f"{DOCKERFILE}: FROM must pin a tag and a full sha256 digest")
     if not re.fullmatch(r"\d{8}T\d{6}Z", dockerfile_value(dockerfile, "DEBIAN_SNAPSHOT")):
         errors.append(f"{DOCKERFILE}: DEBIAN_SNAPSHOT must look like 20260101T000000Z")
-    if not VERSION.fullmatch(dockerfile_value(dockerfile, "RUST_TOOLCHAIN")):
-        errors.append(f"{DOCKERFILE}: RUST_TOOLCHAIN must be an exact version")
+    nightly = dockerfile_value(dockerfile, "RUST_SEL4_NIGHTLY")
+    if not re.fullmatch(r"nightly-\d{4}-\d{2}-\d{2}", nightly):
+        errors.append(f"{DOCKERFILE}: RUST_SEL4_NIGHTLY must be a dated nightly")
+    toolchain = root / RUST_SMOKE_TOOLCHAIN
+    if toolchain.exists():
+        channel = tomllib.loads(toolchain.read_text()).get("toolchain", {}).get("channel", "")
+        if channel != nightly:
+            errors.append(f"{RUST_SMOKE_TOOLCHAIN}: channel {channel} must equal RUST_SEL4_NIGHTLY {nightly}")
 
     modules = submodules(root)
     links = gitlinks(root)
@@ -183,9 +190,13 @@ def parse_heads(text: str) -> dict[str, str]:
     return result
 
 
-def parse_rust_stable(text: str) -> str:
-    version = tomllib.loads(text).get("pkg", {}).get("rust", {}).get("version", "")
-    return version.split()[0] if version else ""
+def rust_sel4_version(root: Path) -> str:
+    """Return the release recorded next to the rust-sel4 rev in Cargo.toml."""
+    path = root / "projects/rust-smoke/Cargo.toml"
+    if not path.exists():
+        return ""
+    match = re.search(r'rust-sel4".*rev = "[0-9a-f]{40}".*#\s*(v[0-9.]+)', path.read_text())
+    return match.group(1) if match else ""
 
 
 def snapshot_status(snapshot: str, today: date) -> str:
@@ -340,10 +351,9 @@ def upstream_rows(root: Path, today: date) -> list[tuple[str, str, str, str, str
     snapshot = dockerfile_value(dockerfile, "DEBIAN_SNAPSHOT")
     rows.append(("Debian snapshot", snapshot, f"{SNAPSHOT_MAX_AGE_DAYS} 日以内",
                  snapshot_status(snapshot, today), "古いと security 更新が入らない"))
-    add("Rust", dockerfile_value(dockerfile, "RUST_TOOLCHAIN"),
-        lambda: parse_rust_stable(fetch(
-            "https://static.rust-lang.org/dist/channel-rust-stable.toml", accept="text/plain"
-        )))
+    add("rust-sel4", rust_sel4_version(root),
+        lambda: latest_release("seL4/rust-sel4"),
+        note="nightly は release の rust-toolchain.toml に合わせる")
     add("Trivy", workflow_env(root, "TRIVY_VERSION"),
         lambda: latest_release("aquasecurity/trivy"))
     add("actionlint", image_tag_version(root, "rhysd/actionlint"),
