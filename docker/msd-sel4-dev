@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# SPDX-License-Identifier: BSD-3-Clause
+# Build or run the shared MSD/seL4 development image.
+set -euo pipefail
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+repo_root="$(cd -- "${script_dir}/.." && pwd -P)"
+image="${MSD_SEL4_DEV_IMAGE:-msd-sel4-dev:local}"
+IMAGE_INPUTS=(
+    docker/debian.sources
+    docker/msd-sel4-dev.Dockerfile
+    docker/python-requirements.txt
+)
+
+usage() {
+    printf 'Usage: %s build | tag | <command> [args...]\n' "$0" >&2
+}
+
+image_input_hash() {
+    local input
+    for input in "${IMAGE_INPUTS[@]}"; do
+        printf '%s  %s\n' "$(sha256sum -- "${repo_root}/${input}" | cut -d' ' -f1)" "${input}"
+    done | LC_ALL=C sort -k2 | sha256sum | cut -c1-16
+}
+
+if (($# == 0)); then
+    usage
+    exit 2
+fi
+
+case "$1" in
+    tag)
+        printf 'inputs-%s\n' "$(image_input_hash)"
+        ;;
+    build)
+        shift
+        docker build --file "${repo_root}/docker/msd-sel4-dev.Dockerfile" \
+            --tag "${image}" "$@" "${repo_root}"
+        ;;
+    *)
+        tty_args=()
+        if [[ -t 0 && -t 1 ]]; then
+            tty_args=(--interactive --tty)
+        fi
+        docker run --rm "${tty_args[@]}" \
+            --user "$(id -u):$(id -g)" \
+            --env HOME=/home/builder \
+            --volume "${repo_root}:/work" \
+            --workdir /work \
+            "${image}" "$@"
+        ;;
+esac
