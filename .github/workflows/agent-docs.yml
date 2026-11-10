@@ -71,5 +71,14 @@ jobs:
       - name: 文書サイズ検査のテスト
         run: tests/check-doc-size/run.sh
 
+      - name: 固定値が重複せず、完全な SHA で固定されている
+        run: python3 .github/scripts/check-pins.py consistency
+
+      - name: seL4 と seL4_tools が seL4 の release manifest と一致する
+        run: python3 .github/scripts/check-pins.py manifest
+
+      - name: 固定値の検査のテスト
+        run: tests/check-pins/run.sh
+
       - name: 空白エラーがない
         run: git diff --check "$(git hash-object -t tree /dev/null)" HEAD -- . ':!vendor' ':!.github/scripts/data'
