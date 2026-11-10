@@ -18,16 +18,17 @@ expect() {
 }
 
 printf 'research/sel4/rust.md\nREADME.md\n' > "$work/files"
-expect false 'docker/**' 'tools/**' '**/*.sh' 'docs/**'
+expect false 'docker/**' 'tools/**' '**/*.sh' 'site/**'
 printf 'tools/qemu-smoke.sh\n' > "$work/files"
 expect true 'tools/**'
 expect true '**/*.sh'
 printf 'vendor/seL4\n' > "$work/files"
 expect true 'vendor/**'
-printf 'docs/index.md\n' > "$work/files"
-expect true 'docs/**'
-expect false 'doc/*'
-printf 'docs/a/b.md\n' > "$work/files"
-expect false 'docs/*'
-expect true 'docs/**'
+# Sample paths avoid docs/ so that check-links does not treat them as stale paths.
+printf 'site/index.md\n' > "$work/files"
+expect true 'site/**'
+expect false 'sit/*'
+printf 'site/a/b.md\n' > "$work/files"
+expect false 'site/*'
+expect true 'site/**'
 printf 'All changed-files tests passed.\n'
