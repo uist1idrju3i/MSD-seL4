@@ -1,0 +1,83 @@
+{
+  "repo_notes": [
+    {
+      "content": "MSD/seL4 は M5Stack CardputerZero（Raspberry Pi CM0 = BCM2837、Cortex-A53、RAM 512 MB、microSD 起動）で seL4 microkernel を動かし、全機能を使える状態を目指す実験的なプロジェクトです。設計の柱は 6 つです。seL4 を活かし切る、電源断で壊れない、更新に失敗しても戻れる、ハードウェアをすべて使える、費用に見合うセキュリティ、検証できる。各ページでは、説明している仕組みがどの柱に関わるかを明記してください。"
+    },
+    {
+      "content": "Wiki は日本語で書いてください。コード、識別子、ファイル名、CMake の変数、コマンドは英語のまま記載します。README.md、AGENTS.md、.agents/skills/、research/、docs/ も日本語です。"
+    },
+    {
+      "content": "現在は開発の準備段階です。OS の実装、driver、ビルド、実機での確認はまだありません。未実装の機能を既にある機能のように説明しないでください。"
+    },
+    {
+      "content": "seL4 kernel は vendor/seL4（17.0.0）を改変せずに使い、検証済み構成 ARM_bcm2837_verified（AArch32、EL1、単一コア、FPU の context switch なし、MCS なし）を既定にする方針です。kernel の証明は、kernel の起動処理、SMMU/IOMMU、debug・printing、ハードウェア、firmware、boot loader、ユーザー空間の driver とアプリケーションを対象にしていません。「システム全体が検証済み」と書かないでください。"
+    },
+    {
+      "content": "vendor/ 配下（vendor/seL4、vendor/m5stack-linux-dtoverlays、vendor/yomiyasu）は shallow submodule で取り込んだ外部コードです。内部を詳しく説明する必要はありません。どの tag/commit を使っているかは .gitmodules と git submodule status を根拠にしてください。m5stack-linux-dtoverlays は GPL のため、ハードウェアの仕様を読む資料としてだけ使います。"
+    },
+    {
+      "content": "docs/ は GitHub Pages で公開するサイト専用です。内部の調査・設計・実験の記録は research/ にあります。確認済みの事実、推測、未確認事項を区別してください。"
+    }
+  ],
+  "pages": [
+    {
+      "title": "概要とプロジェクトの目的",
+      "purpose": "README.md の目的、設計の柱、現在の開発状況を説明する",
+      "page_notes": [
+        {
+          "content": "README.md と .devin/wiki.json の repo_notes を主な根拠にしてください。"
+        }
+      ]
+    },
+    {
+      "title": "リポジトリ構成と開発ルール",
+      "purpose": "ディレクトリ構成、AGENTS.md の規約（main 保護、日本語、vendor/ の扱い、ライセンス、docs/ と research/ の役割、スキル）を説明する",
+      "parent": "概要とプロジェクトの目的",
+      "page_notes": [
+        {
+          "content": "AGENTS.md、CLAUDE.md、.agents/skills/、.claude/skills/ を根拠にしてください。"
+        }
+      ]
+    },
+    {
+      "title": "seL4 の検証済み構成と証明の範囲",
+      "purpose": "ARM_bcm2837_verified の設定、証明された性質、証明の前提と対象外の部分、構成からの差分の管理を説明する",
+      "parent": "概要とプロジェクトの目的",
+      "page_notes": [
+        {
+          "content": "vendor/seL4/configs/ARM_bcm2837_verified.cmake、AGENTS.md §8、.agents/skills/sel4-verified-config/、research/sel4/ を根拠にしてください。"
+        }
+      ]
+    },
+    {
+      "title": "保護ドメインと capability の設計",
+      "purpose": "部品の分割、最小権限、DMA を使う device の扱い、capability の表の方針を説明する",
+      "parent": "seL4 の検証済み構成と証明の範囲",
+      "page_notes": [
+        {
+          "content": ".agents/skills/sel4-capability-design/ と research/ を根拠にしてください。まだ実装はありません。"
+        }
+      ]
+    },
+    {
+      "title": "ユーザー空間の driver",
+      "purpose": "CardputerZero の各 device の driver を作る手順と、対応の状況を説明する",
+      "parent": "保護ドメインと capability の設計",
+      "page_notes": [
+        {
+          "content": ".agents/skills/sel4-driver/、research/drivers/、README.md を根拠にしてください。未着手の driver を対応済みと書かないでください。"
+        }
+      ]
+    },
+    {
+      "title": "依存関係とライセンス",
+      "purpose": "vendor/ の submodule、固定版、更新の手順、ライセンスの方針を説明する",
+      "parent": "リポジトリ構成と開発ルール",
+      "page_notes": [
+        {
+          "content": ".gitmodules、AGENTS.md §3・§4、LICENSE、.agents/skills/vendor-update/ を根拠にしてください。"
+        }
+      ]
+    }
+  ]
+}
