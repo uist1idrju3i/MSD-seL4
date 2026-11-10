@@ -1,10 +1,32 @@
 name: Build
 
+# Skip runs that cannot change this workflow's result (for example research-only PRs).
 on:
   push:
     branches:
       - main
+    paths:
+      - ".github/workflows/build.yml"
+      - ".gitmodules"
+      - "vendor/**"
+      - "docker/**"
+      - "tools/**"
+      - "projects/**"
+      - "patches/**"
+      - "tests/msd-sel4-dev/**"
   pull_request:
+    paths:
+      - ".github/workflows/build.yml"
+      - ".gitmodules"
+      - "vendor/**"
+      - "docker/**"
+      - "tools/**"
+      - "projects/**"
+      - "patches/**"
+      - "tests/msd-sel4-dev/**"
+  # Weekly run keeps the image CVE scan and QEMU smoke test current.
+  schedule:
+    - cron: "23 4 * * 1"
   workflow_dispatch:
 
 permissions: {}

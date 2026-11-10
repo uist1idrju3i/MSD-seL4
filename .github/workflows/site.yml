@@ -1,10 +1,21 @@
 name: Site
 
+# Skip runs that cannot change this workflow's result (for example research-only PRs).
 on:
   push:
     branches:
       - main
+    paths:
+      - ".github/workflows/site.yml"
+      - ".github/scripts/check-site.py"
+      - "docs/**"
+      - "tests/check-site/**"
   pull_request:
+    paths:
+      - ".github/workflows/site.yml"
+      - ".github/scripts/check-site.py"
+      - "docs/**"
+      - "tests/check-site/**"
   workflow_dispatch:
 
 permissions: {}
