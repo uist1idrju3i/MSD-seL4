@@ -12,6 +12,7 @@ application、library、依存、toolchain を追加・更新するときは、�
 | 依存 | 現在値の確認方法 | 変更履歴の参照先 | 特に確認すること |
 |---|---|---|---|
 | seL4 kernel（`vendor/seL4`） | `git submodule status vendor/seL4` と tag | `vendor/seL4/CHANGES.md` の全版、release notes、`git log <old>..<new> -- src/plat/bcm2837 src/arch/arm configs tools/dts` | Security-relevant Changes、BREAKING、Upgrade Notes、`configs/ARM_bcm2837_verified.cmake` と `configs/include/ARM_verified_include.cmake` の差、rpi3 の DTS・memory・alignment の変更、検証済み構成の一覧（docs.sel4.systems の Verified Configurations）。手順は「sel4-verified-config」スキル |
+| seL4_tools（`vendor/seL4_tools`） | `git -C vendor/seL4_tools rev-parse HEAD` | `git log <old>..<new> -- elfloader-tool cmake-tool`、seL4 の release の manifest（`seL4/sel4test-manifest` の tag） | seL4 本体の tag が指す commit と一致しているか、bcm2837 と AArch32 の elfloader の変更、cache と MMU の扱い |
 | m5stack-linux-dtoverlays | `git -C vendor/m5stack-linux-dtoverlays rev-parse HEAD` | `git log <old>..<new>`、README、CardputerZero の overlay と driver | 配線、I2C アドレス、割り込み、reset、電源の手順の変化。driver の調査文書（`research/drivers/`）に影響を反映する |
 | yomiyasu | `git -C vendor/yomiyasu rev-parse HEAD` | nanaism/yomiyasu の release と変更履歴 | lint と check の挙動、スキルの手順の変化 |
 | 開発用 image（`docker/`） | Dockerfile の `FROM` digest と apt・pip・Rust の固定版 | Debian の更新、各 tool の release | cross GCC、CMake、Ninja、QEMU、Rust の版と、seL4 の build 依存の対応 |

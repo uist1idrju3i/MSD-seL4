@@ -13,7 +13,7 @@
       "content": "seL4 kernel は vendor/seL4（17.0.0）を改変せずに使い、検証済み構成 ARM_bcm2837_verified（AArch32、EL1、単一コア、FPU の context switch なし、MCS なし）を既定にする方針です。kernel の証明は、kernel の起動処理、SMMU/IOMMU、debug・printing、ハードウェア、firmware、boot loader、ユーザー空間の driver とアプリケーションを対象にしていません。「システム全体が検証済み」と書かないでください。"
     },
     {
-      "content": "vendor/ 配下（vendor/seL4、vendor/m5stack-linux-dtoverlays、vendor/yomiyasu）は shallow submodule で取り込んだ外部コードです。内部を詳しく説明する必要はありません。どの tag/commit を使っているかは .gitmodules と git submodule status を根拠にしてください。m5stack-linux-dtoverlays は GPL のため、ハードウェアの仕様を読む資料としてだけ使います。"
+      "content": "vendor/ 配下（vendor/seL4、vendor/seL4_tools、vendor/m5stack-linux-dtoverlays、vendor/yomiyasu）は shallow submodule で取り込んだ外部コードです。内部を詳しく説明する必要はありません。どの tag/commit を使っているかは .gitmodules と git submodule status を根拠にしてください。m5stack-linux-dtoverlays は GPL のため、ハードウェアの仕様を読む資料としてだけ使います。"
     },
     {
       "content": "docs/ は GitHub Pages で公開するサイト専用です。内部の調査・設計・実験の記録は research/ にあります。確認済みの事実、推測、未確認事項を区別してください。"

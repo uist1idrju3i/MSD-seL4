@@ -10,3 +10,7 @@
 	path = vendor/m5stack-linux-dtoverlays
 	url = https://github.com/m5stack/m5stack-linux-dtoverlays.git
 	shallow = true
+[submodule "vendor/seL4_tools"]
+	path = vendor/seL4_tools
+	url = https://github.com/seL4/seL4_tools.git
+	shallow = true
