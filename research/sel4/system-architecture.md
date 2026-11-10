@@ -38,6 +38,7 @@ userland の部品の分け方と、資源の持ち方の方針です。基盤�
 ### DMA と cache
 
 - IOMMU がないため、DMA を使える driver（SD の SDHOST・EMMC、USB の DWC2、SPI・I2S の DMA、DMA controller）は、任意の物理メモリを読み書きできます。capability による分離は、DMA には効きません。
+- 中央の DMA controller を使う device と、自分で bus master になる device では評価が違います。device ごとの評価と PIO・DMA の方針の案は [dma-iommu.md](../drivers/dma-iommu.md) にあります。
 - このため、DMA を使う driver は信頼する部品（trusted computing base）に数え、[threat-model.md](../security/threat-model.md) と形式検証の範囲の説明に明記します。
 - DMA の buffer は専用の `Untyped` から作り、物理 address を driver に渡します。Cortex-A53 と DMA の間の cache の一貫性は、cache の clean・invalidate を driver が行う前提にします。具体の手順は driver ごとに調べます（未確認）。
 

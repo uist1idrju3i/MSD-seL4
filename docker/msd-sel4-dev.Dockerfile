@@ -30,6 +30,7 @@ RUN rm -f /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.
         device-tree-compiler \
         file \
         gcc-aarch64-linux-gnu \
+        g++-arm-linux-gnueabi \
         gcc-arm-linux-gnueabi \
         git \
         libxml2-utils \
@@ -37,7 +38,9 @@ RUN rm -f /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.
         python3 \
         python3-jinja2 \
         python3-jsonschema \
+        python3-libarchive-c \
         python3-lxml \
+        python3-pyelftools \
         python3-ply \
         python3-typing-extensions \
         python3-venv \
@@ -70,7 +73,7 @@ RUN rustup toolchain install "${RUST_TOOLCHAIN}" --profile minimal \
     && aarch64-linux-gnu-gcc --version | head -1 \
     && qemu-system-arm --version | head -1 \
     && qemu-system-aarch64 -machine help | grep -Eq '^raspi3b ' \
-    && python3 -c 'import jinja2, jsonschema, lxml, ply, pyfdt, typing_extensions, yaml'
+    && python3 -c 'import elftools, jinja2, jsonschema, libarchive, lxml, ply, pyfdt, typing_extensions, yaml'
 
 # The wrapper runs as the host UID, which may differ from 1000 on CI runners.
 RUN groupadd --gid 1000 builder \
