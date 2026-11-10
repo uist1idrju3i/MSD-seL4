@@ -1,0 +1,14 @@
+title: MSD/seL4
+description: M5Stack CardputerZero で seL4 microkernel を動かす実験的なプロジェクト
+lang: ja
+url: https://uist1idrju3i.github.io
+baseurl: /MSD-seL4
+theme: minima
+header_pages:
+  - design.md
+  - status.md
+  - development.md
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor
