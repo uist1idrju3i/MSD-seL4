@@ -259,6 +259,24 @@ def compare(current: str, latest: str) -> str:
     return "最新" if version_key(current) >= version_key(latest) else "更新あり"
 
 
+def patch_preimages(text: str) -> list[tuple[str, str]]:
+    """Return (path, pre-image text) for each hunk of a unified diff."""
+    hunks: list[tuple[str, str]] = []
+    path, lines = "", None
+    for line in text.splitlines():
+        if line.startswith("+++ "):
+            path = line[4:].split("\t")[0].removeprefix("b/")
+        elif line.startswith("@@"):
+            if lines is not None:
+                hunks.append((path, "\n".join(lines)))
+            lines = []
+        elif lines is not None and line[:1] in (" ", "-", ""):
+            lines.append(line[1:])
+    if lines is not None:
+        hunks.append((path, "\n".join(lines)))
+    return hunks
+
+
 def upstream_rows(root: Path, today: date) -> list[tuple[str, str, str, str, str]]:
     rows: list[tuple[str, str, str, str, str]] = []
 
@@ -282,6 +300,22 @@ def upstream_rows(root: Path, today: date) -> list[tuple[str, str, str, str, str
     add("seL4_tools", links["vendor/seL4_tools"][:12],
         lambda: manifest_revisions(latest_release("seL4/seL4"))["seL4_tools.git"][:12],
         tools_status, "最新の seL4 release の sel4test-manifest と比べる")
+    for patch in sorted((root / "patches" / "seL4").glob("*.patch")):
+        def patched_site_state(patch: Path = patch) -> str:
+            cache: dict[str, str] = {}
+            for path, pre in patch_preimages(patch.read_text()):
+                if path not in cache:
+                    cache[path] = fetch(
+                        f"https://raw.githubusercontent.com/seL4/seL4/master/{path}",
+                        accept="text/plain",
+                    )
+                if pre not in cache[path]:
+                    return "変更あり"
+            return "修正前のまま"
+        add(f"seL4 の patch {patch.name[:4]}", "修正前のまま", patched_site_state,
+            lambda current, latest: "最新" if current == latest else "更新あり",
+            "seL4 master の該当箇所。変わったら上流の修正を確かめ、取り込めたら patch を外す")
+
     yomiyasu = parse_peeled_tags(
         ls_remote(modules["vendor/yomiyasu"]["url"], "refs/tags/*")
     ).get(links["vendor/yomiyasu"], links["vendor/yomiyasu"][:12])

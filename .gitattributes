@@ -1,0 +1,2 @@
+# Unified diffs keep trailing spaces on blank context lines.
+patches/**/*.patch -whitespace

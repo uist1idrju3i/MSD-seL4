@@ -18,6 +18,13 @@ description: seL4 kernel の CMake 構成を決める・変えるとき、seL4 �
 3. [検証済み構成からの差分](../../../research/sel4/verified-config-deviations.md) に、変数、値、理由、証明への影響、戻す条件、利用者の判断の記録を一行で足します。利用者の判断を得る前に、製品の構成へ入れません。
 4. 開発や試験のためだけの構成（printing を有効にした debug build など）は、製品の構成と名前を分け、製品の image に入らないことを確かめます。
 
+## kernel の source に patch を当てるとき
+
+1. `vendor/seL4` は編集しません。patch を `patches/seL4/<番号>-<内容>.patch` に置きます。先頭に `SPDX-License-Identifier: GPL-2.0-only` と、英語の説明（原因、変える箇所、外す条件）を書きます。
+2. `tools/prepare-sel4-source.sh` が build 時の写しに当てます。`MSD_SEL4_PATCHES=none` を付けた改変なしの build と、patch を当てた build の両方の結果を、`research/experiments/` に分けて記録します。
+3. [検証済み構成からの差分](../../../research/sel4/verified-config-deviations.md) の「kernel の source の patch」に、変える箇所、理由、証明への影響、戻す条件、利用者の判断を一行で足します。証明は改変なしの source を対象にしているので、patch を当てた source では証明もバイナリ正当性の検証も実行していないことを書きます。
+4. 上流が直したら、その版を取り込んで patch を外します。週次の `pins-check` が、seL4 の master で patch の箇所が変わったかを知らせます。
+
 ## seL4 を更新するとき
 
 - 「vendor-update」スキルの手順に加えて、`CHANGES.md` の Security-relevant Changes と BREAKING の項目のうち、AArch32、`bcm2837`、検証済み構成に関わるものを全部読みます。
@@ -32,5 +39,6 @@ description: seL4 kernel の CMake 構成を決める・変えるとき、seL4 �
 ## 提出前の確認
 
 - [ ] 製品の構成が `ARM_bcm2837_verified` のままか、差分が一覧に記録され利用者が判断した
+- [ ] kernel の source の patch が一覧に記録され、まだ上流で直っていない
 - [ ] 証明の範囲と前提を、出典付きで正確に書いた
 - [ ] 開発用の構成が製品の image に入らない

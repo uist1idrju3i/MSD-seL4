@@ -28,6 +28,7 @@
 
 ### 変更
 
+- seL4 17.0.0 の起動処理の不具合を直す patch（`patches/seL4/`）を加えました。FPU を使わない構成では、`vmrs fpexc` で Undefined Instruction になります。patch は `tools/prepare-sel4-source.sh` が build 時の写しに当て、`vendor/seL4` は変えません。`tools/build-verified-kernel.sh` と `tools/qemu-smoke.sh` は、既定で patch を当てた kernel を build します（`MSD_SEL4_PATCHES=none` で改変なし）。CI の `kernel-verified` は、QEMU raspi3b の smoke test も実行します。週次の `pins-check` は、seL4 の master で patch の箇所が変わったかを知らせます。
 - PR の本文と完了報告で、確かめていないことを最初に書く運用を AGENTS.md に加え、PR template（`.github/pull_request_template.md`）を追加しました。
 
 - `main` の `publish-dev-image` は、来歴を検証できる同じ入力の image が公開済みなら build と push を省きます。Trivy の DB を `actions/cache` に置きます。
