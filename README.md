@@ -20,7 +20,7 @@ MSD/seL4 は、M5Stack CardputerZero（Raspberry Pi CM0 = BCM2837、Cortex-A53�
 開発の準備段階です。OS の実装、ビルド、実機での確認はまだありません。
 
 - seL4 kernel: 17.0.0 を使い、検証済み構成 `ARM_bcm2837_verified`（AArch32、単一コア）を既定にする方針です。17.0.0 は改変なしでは起動処理の途中で止まるため、起動処理を直す patch（`patches/seL4/`）を build 時に当てています（[差分](research/sel4/verified-config-deviations.md)）。
-- driver: すべて未着手です。driver ごとに調査と計画を立ててから実装します。
+- driver: すべて調査済みで、実装は未着手です（[research/drivers/README.md](research/drivers/README.md)）。driver ごとに計画を立て、確認を得てから実装します。
 
 ## 形式検証の範囲
 

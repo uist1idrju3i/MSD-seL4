@@ -39,6 +39,7 @@ DMA と PIO の選び方、IOMMU がないことの影響、QEMU で確かめら
 - I2C の BSC0・BSC1・BSC2 は 1 つの割り込みを共有し、mini UART・SPI1・SPI2 は page と割り込みを共有します。それぞれ 1 つの部品にまとめます。
 - 内部の 6 つの I2C の device は BSC1 の 1 本の bus にあります。I2C の部品は、client ごとに使える address を許可表で限ります。
 - M5IOE1 は電源の保持、共有の reset（キーボードと USB hub）、LCD の reset と backlight、拡張端子の電源を 1 つで制御します。M5IOE1 の部品は、client ごとに使える pin と操作を許可表で限ります。register の仕様は M5Stack の GPL の driver にしかありません。
+- 資料だけでは決まらない項目は、[実機の確認の計画](../experiments/hardware-checklist.md) にまとめました。
 - QEMU の raspi3b で試せるのは、SoC 側の手順（GPIO、I2C、SPI の PIO、SDHOST の PIO、DWC2 の DMA mode、mailbox の一部）だけです。CardputerZero の device（TCA8418、ST7789V、M5IOE1、ES8389 など）は QEMU にありません。
 
 ## 作る順序の案（利用者の判断）
