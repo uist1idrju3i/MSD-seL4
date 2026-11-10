@@ -54,17 +54,15 @@ RUN python3 -m venv --system-site-packages /opt/sel4-python \
     && rm -f /tmp/python-requirements.txt \
     && rm -rf /root/.cache
 
-RUN groupadd --gid 1000 builder \
-    && useradd --uid 1000 --gid 1000 --create-home --home-dir /home/builder \
-        --shell /bin/bash builder
-
-ENV PATH=/opt/sel4-python/bin:/home/builder/.cargo/bin:${PATH}
-USER builder
-WORKDIR /work
-
+# Rust lives outside HOME so that any host UID passed by docker/msd-sel4-dev
+# can use it read-only.
+ENV RUSTUP_HOME=/opt/rust/rustup \
+    CARGO_HOME=/opt/rust/cargo \
+    PATH=/opt/sel4-python/bin:/opt/rust/cargo/bin:${PATH}
 RUN rustup toolchain install "${RUST_TOOLCHAIN}" --profile minimal \
         --target armv7a-none-eabi --target aarch64-unknown-none \
     && rustup default "${RUST_TOOLCHAIN}" \
+    && chmod -R a+rX /opt/rust \
     && rustc --version \
     && cmake --version | head -1 \
     && ninja --version \
@@ -73,3 +71,11 @@ RUN rustup toolchain install "${RUST_TOOLCHAIN}" --profile minimal \
     && qemu-system-arm --version | head -1 \
     && qemu-system-aarch64 -machine help | grep -Eq '^raspi3b ' \
     && python3 -c 'import jinja2, jsonschema, lxml, ply, pyfdt, typing_extensions, yaml'
+
+# The wrapper runs as the host UID, which may differ from 1000 on CI runners.
+RUN groupadd --gid 1000 builder \
+    && useradd --uid 1000 --gid 1000 --create-home --home-dir /home/builder \
+        --shell /bin/bash builder \
+    && chmod 1777 /home/builder
+USER builder
+WORKDIR /work
