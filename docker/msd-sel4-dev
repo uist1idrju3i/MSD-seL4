@@ -6,6 +6,8 @@ set -euo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 repo_root="$(cd -- "${script_dir}/.." && pwd -P)"
 image="${MSD_SEL4_DEV_IMAGE:-msd-sel4-dev:local}"
+image_repository=ghcr.io/uist1idrju3i/msd-sel4-dev
+source_repository=uist1idrju3i/MSD-seL4
 IMAGE_INPUTS=(
     docker/debian.sources
     docker/msd-sel4-dev.Dockerfile
@@ -13,7 +15,7 @@ IMAGE_INPUTS=(
 )
 
 usage() {
-    printf 'Usage: %s build | tag | <command> [args...]\n' "$0" >&2
+    printf 'Usage: %s build | tag | available | pull | ensure | <command> [args...]\n' "$0" >&2
 }
 
 image_input_hash() {
@@ -21,6 +23,41 @@ image_input_hash() {
     for input in "${IMAGE_INPUTS[@]}"; do
         printf '%s  %s\n' "$(sha256sum -- "${repo_root}/${input}" | cut -d' ' -f1)" "${input}"
     done | LC_ALL=C sort -k2 | sha256sum | cut -c1-16
+}
+
+published_image() {
+    printf '%s:inputs-%s\n' "${image_repository}" "$(image_input_hash)"
+}
+
+# Prints true or false; fails when the registry cannot be asked.
+published_available() {
+    local output
+    if output="$(docker manifest inspect "$(published_image)" 2>&1)"; then
+        printf 'true\n'
+    elif [[ "${output}" == *"manifest unknown"* || "${output}" == *"not found"* ]]; then
+        printf 'false\n'
+    else
+        printf 'Could not inspect %s: %s\n' "$(published_image)" "${output}" >&2
+        return 1
+    fi
+}
+
+# Pull the image for the current inputs and verify its build provenance.
+pull_published() {
+    local source
+    source="$(published_image)"
+    docker pull "${source}"
+    if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+        gh attestation verify "oci://${source}" --repo "${source_repository}" >&2
+    elif [[ "${MSD_SEL4_DEV_REQUIRE_ATTESTATION:-0}" == 1 ]]; then
+        printf 'Error: an authenticated gh is required to verify %s.\n' "${source}" >&2
+        return 1
+    else
+        printf 'Warning: gh is unavailable or not authenticated; provenance of %s was not verified.\n' \
+            "${source}" >&2
+    fi
+    docker tag "${source}" "${image}"
+    printf 'Pulled %s as %s\n' "${source}" "${image}"
 }
 
 if (($# == 0)); then
@@ -31,6 +68,20 @@ fi
 case "$1" in
     tag)
         printf 'inputs-%s\n' "$(image_input_hash)"
+        ;;
+    available)
+        published_available
+        ;;
+    pull)
+        pull_published
+        ;;
+    ensure)
+        # Use the published image when its provenance verifies; otherwise build.
+        if [[ "$(published_available)" == true ]] && pull_published; then
+            exit 0
+        fi
+        printf 'Building %s locally.\n' "${image}" >&2
+        exec "$0" build
         ;;
     build)
         shift

@@ -14,3 +14,4 @@
 - CI（`agent-docs`、`Lint`、Advanced 設定の `CodeQL`）と Dependabot の設定を追加しました。
 - `vendor/seL4_tools`（elfloader と CMake の helper、seL4 17.0.0 の manifest が指す commit）を shallow submodule で追加しました。
 - 固定版の週次確認（`pins-check` workflow と `.github/scripts/check-pins.py`）を追加しました。workflow と Dockerfile の固定値の重複、`vendor/seL4_tools` と seL4 の release manifest の一致を PR ごとに検査し、上流の新しい版を週次の Issue で知らせます。
+- CI の `kernel-verified` が、入力の hash が同じ公開済みの開発用 image を、build の来歴を検証して使うようにしました（`docker/msd-sel4-dev available`・`pull`・`ensure`）。公開する image には provenance の attestation を付けます。UID 1000 以外での試験（`tests/msd-sel4-dev/run.sh`）を加えました。
