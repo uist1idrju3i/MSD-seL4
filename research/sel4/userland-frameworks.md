@@ -39,7 +39,7 @@ D1 で AArch32 の検証済み構成を選んだため、userland の基盤は A
 | C: rust-sel4 と `sel4-capdl-initializer` | なし | 自作 | Rust | Rust の型で IPC を書ける | 初期化の証明を失う |
 | D: Microkit を AArch32 に移植 | なし（Microkit の monitor は証明されていない） | Microkit の SDF | C と Rust | sDDF の部品を使える | 上流に AArch32 の対応がなく、移植と追従の工数が大きい |
 
-## 推奨（推測を含む）
+## 推奨と決定（推奨の理由は推測を含む）
 
 - **B を推奨します。** 初期化の証明がある `capdl-loader-app` を root task とし、system の記述を capDL で静的に固定します。capability の分配は capDL の仕様から機械的に確かめられます（「部品 X が資源 Y に届くか」）。
 - 部品は C を基本とし、証明や検査の道具（Frama-C、CBMC、Kani、Verus）との相性を形式検証の調査（`research/verification/`）で比べてから、Rust を使う範囲を決めます。
@@ -47,7 +47,7 @@ D1 で AArch32 の検証済み構成を選んだため、userland の基盤は A
 - sDDF の設計（方向が決まった共有メモリの queue と通知、driver と virtualiser の分離）は、コードを使わずに考え方として取り入れます。
 - smoke test（task 17）は、capDL を使う前に、最小の root task で起動と UART を確かめる段階から始めます。
 
-この推奨は userland の基盤を決めるもので、利用者の判断を受けてから確定します。
+**決定（2026-11-11、利用者の判断）:** 案 B を採ります。
 
 ## 未確認
 
