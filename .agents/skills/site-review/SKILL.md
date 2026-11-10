@@ -5,29 +5,38 @@ description: MSD/seL4 の公開サイト（docs/、GitHub Pages）の HTML・CSS
 
 # site-review（サイトの見え方の確認）
 
-公開サイト（GitHub Pages、`docs/`）は、パソコンとスマートフォンのほか、CardputerZero のような小さな画面と遅い CPU、テキストブラウザー（w3m、lynx）、スクリーンリーダーから読まれる前提で作っています。`docs/` を変えたら、次の手順で変更の前後を比べます。`check-site.py` の CI が見るのはファイルの一覧、CSP、参照先、URL だけで、見え方は見ません。
+公開サイト（GitHub Pages、`docs/`）は、パソコンとスマートフォンのほか、CardputerZero のような小さな画面と遅い CPU、テキストブラウザー（w3m、lynx）、スクリーンリーダーから読まれる前提で作っています。`docs/` を変えたら、次の手順で変更の前後を比べます。CI の `Site` workflow（`check-site.py`）が見るのは、置いてよいファイルの種類、front matter、`lang`、`h1` の数、title、viewport、script、参照先、`baseurl` だけで、見え方は見ません。
 
 入力は変更前後の commit、diff、使用するブラウザーの版です。文書やスキルだけを変え、サイトに影響がない場合は UI 試験を行う必要はありません。描画できない、必要な配色を試せない場合は、代わりの条件を合格とせず、未確認として報告します。
 
 ## 1. テキストブラウザー（必ず行う）
 
-変更前（`origin/main`）と変更後を文字で出し、差分を見ます。ファイルを直接読むので、サーバーは要りません。出力はリポジトリの外（`$TMPDIR` など）に置き、コミットしません。
+`docs/` は Markdown なので、GitHub Pages と同じ builder（`.github/workflows/site.yml` が固定している `actions/jekyll-build-pages` の image）で変更前（`origin/main`）と変更後を build し、生成された HTML を文字で出して差分を見ます。出力はリポジトリの外（`$TMPDIR` など）に置き、コミットしません。
 
 ```sh
-out="${TMPDIR:-/tmp}/site-review"; mkdir -p "$out"; site=docs
-for f in index.html 404.html; do
-  for v in before after; do
-    if [ "$v" = before ]; then git show "origin/main:$site/$f"; else cat "$site/$f"; fi > "$out/$v-$f"
+out="${TMPDIR:-/tmp}/site-review"; rm -rf "$out"; mkdir -p "$out/before"
+git archive origin/main docs | tar -x -C "$out/before"
+cp -R docs "$out/after"; mv "$out/before/docs" "$out/before-src"; rmdir "$out/before"
+for v in before after; do
+  src="$out/$v"; [ "$v" = before ] && src="$out/before-src"
+  docker run --rm --user "$(id -u):$(id -g)" -v "$src:/work/src:ro" -v "$out:/work/out" \
+    -e GITHUB_WORKSPACE=/work -e INPUT_SOURCE=src -e INPUT_DESTINATION="out/$v-site" \
+    -e GITHUB_REPOSITORY=uist1idrju3i/MSD-seL4 -e JEKYLL_GITHUB_TOKEN= \
+    ghcr.io/actions/jekyll-build-pages:v1.0.13 >/dev/null
+  python3 .github/scripts/check-site.py --site "$out/$v-site"
+  for page in index.html design/index.html status/index.html development/index.html; do
+    f="$out/$v-site/$page"; name="$(printf '%s' "$page" | tr / -)"
+    [ -f "$f" ] || continue
     for cols in 40 80; do
-      w3m -T text/html -dump -cols "$cols" -o display_charset=UTF-8 < "$out/$v-$f" > "$out/$v-$f.w3m$cols.txt"
+      w3m -T text/html -dump -cols "$cols" -o display_charset=UTF-8 < "$f" > "$out/$v-$name.w3m$cols.txt"
     done
-    lynx -stdin -dump -nolist -width=80 -display_charset=utf-8 -assume_charset=utf-8 < "$out/$v-$f" > "$out/$v-$f.lynx80.txt"
+    lynx -stdin -dump -nolist -width=80 -display_charset=utf-8 -assume_charset=utf-8 < "$f" > "$out/$v-$name.lynx80.txt"
   done
 done
 diff -u "$out/before-index.html.w3m40.txt" "$out/after-index.html.w3m40.txt"
 ```
 
-この出力先は一時作業用です。報告の根拠に使う画像・テキスト・版の記録は、削除する前に run ID ごとの永続的な場所へコピーして照合します。過去の証拠に同じ出力先を使い回しません。
+image の tag は、`site.yml` の `actions/jekyll-build-pages` の版と合わせます。`jekyll build` を直接呼ぶと、GitHub Pages が許可する plugin（`jekyll-seo-tag` など）が読み込まれず失敗するので、image の entrypoint を使います。この出力先は一時作業用です。報告の根拠に使う画像・テキスト・版の記録は、削除する前に run ID ごとの永続的な場所へコピーして照合します。過去の証拠に同じ出力先を使い回しません。
 
 w3m と lynx がなければ、`sudo apt-get install w3m lynx` で入れます。版は `w3m -version` と `lynx -version` で確かめ、報告に書きます。
 
@@ -35,20 +44,20 @@ w3m と lynx がなければ、`sudo apt-get install w3m lynx` で入れます�
 
 - 見出しと本文が別の行に分かれている。見出しの文と説明の文が1行につながっていない。
 - 見出しの順番と階層が、HTML の `h1`〜`h3` と合っている。
-- 最初にスキップリンク（「本文へ移動」）が出る。
+- theme（minima）の header と footer が、本文の前後に読める順で出る。
 - 画像は `alt` の文字で出る。飾りの画像（`alt=""`）は何も出ない。
 - リンクの文字だけで行き先がわかる。
 - 40 桁でも、日本語の折り返しで意味が崩れない。
 
-改行や区切りを CSS（`display: block` など）だけで作らず、要素（`h2`、`h3`、`p`、`li`）で作ります。テキストブラウザーは CSS を読まないので、`<strong>` と `<span>` を CSS で2行にしても、1行につながって出ます（2026-10-19 にカードで起きた問題です）。
+改行や区切りを CSS（`display: block` など）だけで作らず、要素（`h2`、`h3`、`p`、`li`）で作ります。テキストブラウザーは CSS を読まないので、`<strong>` と `<span>` を CSS で2行にしても、1行につながって出ます（姉妹プロジェクトの MSD/Linux で 2026-10-19 に起きた問題です）。
 
-lynx 2.9.0dev.10 は全角文字を1桁と数えて折り返すので、日本語の長い行は端末の右端からはみ出します。これは lynx の限界で、サイトの側では直しません。崩れの判定は w3m の出力で行い、lynx では見出しと本文が分かれているかだけを見ます。経緯は `research/ 配下の公開サイトの調査` にあります。
+lynx 2.9.0dev.10 は全角文字を1桁と数えて折り返すので、日本語の長い行は端末の右端からはみ出します。これは lynx の限界で、サイトの側では直しません。崩れの判定は w3m の出力で行い、lynx では見出しと本文が分かれているかだけを見ます。
 
 利用者に見え方を見せるときは、80 桁 × 30 行の端末で w3m と lynx を開いて画面を撮り、変更前後の4枚を添付します。端末と撮影の道具は環境によって違うので、使った端末、フォント、文字の大きさを報告に書きます。
 
 ## 2. 画面の大きさと配色（必ず行う）
 
-Chromium の headless（Playwright など）で、次の条件のスクリーンショットを変更の前後で撮ります。サーバーは `python3 -m http.server -d docs 8123` で立てます。
+Chromium の headless（Playwright など）で、次の条件のスクリーンショットを変更の前後で撮ります。生成した site は `baseurl`（`/MSD-seL4`）の下で配るので、`mkdir -p "$out/serve" && ln -sfn "$out/after-site" "$out/serve/MSD-seL4" && python3 -m http.server -d "$out/serve" 8123` で立て、`http://localhost:8123/MSD-seL4/` を開きます。
 
 | 画面 | 配色 | 撮る範囲 |
 |---|---|---|
@@ -58,7 +67,7 @@ Chromium の headless（Playwright など）で、次の条件のスクリーン
 | 320×170 | 強制カラー（`forced_colors="active"`） | 最初の画面 |
 
 - 配色は `color_scheme="light"` と `"dark"` で切り替えます。
-- 撮った画像は、自分の目で開いて見ます。文字が切れていないか、重なっていないか、ロゴと背景の模様が読みやすさを損なっていないかを見ます。
+- 撮った画像は、自分の目で開いて見ます。文字が切れていないか、重なっていないか、表や長い URL が画面からはみ出していないかを見ます。
 - 見た目を変えるつもりのない変更では、画素の比較（ImageMagick の `compare -metric AE` など）で 0 になることも確かめます。画素の比較は目で見ることの代わりにはなりません。
 - ページ全体を1枚に撮る方法は、`content-visibility` などで描画を遅らせた部分を描かないことがあります。全体の画像で節が欠けたら、スクロールして撮った画像でも確かめます。
 
@@ -68,7 +77,7 @@ Chromium の headless（Playwright など）で、次の条件のスクリーン
 
 ## 4. 速さを変える変更
 
-「速くする」ための変更（minify、インライン化、`content-visibility`、先読みなど）は、experiment-record スキルに従って測ります。測る前に採否の基準を決め、320×170・CPU 6 倍の条件を含めます。これまでに不採用にしたものと理由は `research/ 配下の公開サイトの調査` にあるので、同じ検討を繰り返す前に読みます。
+「速くする」ための変更（minify、インライン化、`content-visibility`、先読みなど）は、experiment-record スキルに従って測ります。測る前に採否の基準を決め、320×170・CPU 6 倍の条件を含めます。採否と理由は `research/experiments/` に残します。
 
 ## 5. 報告
 
