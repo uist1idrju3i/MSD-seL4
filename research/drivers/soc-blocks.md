@@ -109,6 +109,6 @@ seL4 では 1 つの IRQ の capability を 1 つの部品が受け取ります�
 
 ## 決めること（利用者の判断）
 
-1. 割り込み controller と同じ page にある mailbox を、どの部品に渡すか。推奨: mailbox の driver だけに渡し、割り込み controller を書かないことを driver の検証の対象にする（[shared-intc-page.md](../sel4/shared-intc-page.md) の案 A）。
+1. 割り込み controller と同じ page にある mailbox を、どの部品に渡すか。決定（2026-11-11）: mailbox の driver だけに渡し、割り込み controller を書かないことを driver の検証の対象にする（[shared-intc-page.md](../sel4/shared-intc-page.md) の案 A）。
 2. clock を誰が設定するか。推奨: 起動の直後は firmware に任せ、変更が要る PCM の clock だけ mailbox の property で設定する。
 3. I2C の BSC0・BSC1・BSC2 を 1 つの部品にまとめるか。推奨: 1 つにまとめる。割り込みが共有で、分けても隔離が強くならないため。
