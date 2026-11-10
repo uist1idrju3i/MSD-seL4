@@ -1,0 +1,16 @@
+# Personal agent settings (do not commit)
+CLAUDE.local.md
+.claude/settings.local.json
+AGENTS.override.md
+
+# yomiyasu_check.py records
+.yomiyasu/
+
+# seL4 / CMake build outputs
+/build*/
+/images/
+
+# Python / OS
+__pycache__/
+*.py[cod]
+.DS_Store
