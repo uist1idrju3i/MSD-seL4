@@ -18,6 +18,8 @@
 
 - 公開サイトの検査（`Site` workflow、`.github/scripts/check-site.py`）を加えました。GitHub Pages と同じ builder で `docs/` を build し、生成された HTML の言語、見出し、参照先、script を確かめます。
 
+- seL4 の調査を `research/sel4/` に加えました。形式検証済みのアーキテクチャと platform ごとの SoC・CPU の一覧、userland の基盤の版と推奨、capability・IPC・IRQ・MMIO・DMA の設計方針です。
+
 ### 変更
 
 - `main` の `publish-dev-image` は、来歴を検証できる同じ入力の image が公開済みなら build と push を省きます。Trivy の DB を `actions/cache` に置きます。

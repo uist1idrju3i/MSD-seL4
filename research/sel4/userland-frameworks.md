@@ -13,12 +13,44 @@ D1 で AArch32 の検証済み構成を選んだため、userland の基盤は A
 | capDL loader | AArch32 で使える | 初期化のモデルレベルの機能正当性（AArch32） | https://docs.sel4.systems/projects/sel4/verified-configurations.html |
 | rust-sel4 | seL4 が対応する全構成を対象とする | なし | https://docs.sel4.systems/projects/rust/supported-configurations.html |
 
-## 推測
+## 版と保守の状況（2026-11-11 に確かめた事実）
 
-- 「seL4 を活かし切る」には、capDL で静的なシステムを記述し、検証済みの初期化で起動する形が最も合います。その上の部品の作り方（CAmkES、自作の小さな枠組み、Microkit の AArch32 への移植、rust-sel4）は比較が必要です。
-- sDDF の設計（方向が決まった共有メモリの queue と通知、driver と virtualiser の分離）は、AArch32 でも考え方として使えます。コードを使うかどうかは移植の工数を見て決めます。
+| 部品 | 最新の版 | seL4 17.0.0 との組み合わせ |
+|---|---|---|
+| CAmkES（`camkes-tool`） | `camkes-3.13.1`（2026-10-30） | `camkes-manifest` の `camkes-3.13.1` は kernel を `62e345c2`（17.0.0 と同じ commit）、`seL4_tools` を `6493e0c6`（`vendor/seL4_tools` と同じ）に固定している |
+| capDL（`seL4/capdl`） | `0.6.1`（2026-10-30） | 同じ manifest が `23e3c5bb` に固定している |
+| rust-sel4 | `v6.0.0`（2026-10-30） | 32-bit x86 を除く、kernel が対応する全構成を対象とする（文書の記載） |
+| Microkit | `2.4.0`（2026-10-30） | AArch32 に対応しない（上表） |
+| sDDF | `0.7.0`（2026-08-19） | AArch32 の BCM 用 driver は timer だけ |
+
+## 初期化の証明の範囲
+
+- C の `capdl-loader-app` は、algorithm が Isabelle/HOL で仕様化され、**model のレベルで**正しいと証明されています。**実装（C のコード）のレベルではありません**。証明は `seL4/l4v` の `sys-init/` にあります。
+- 正しさの主張は「loader の終了後、system は capDL の仕様にある object と capability だけを持つ（loader の CSpace に残る、使われない capability を除く）」です。入力の仕様が well-formed の条件（`sys-init/WellFormed_SI.thy`）を満たす必要があります。
+- 文書が capDL の初期化子の証明を挙げるのは `ARM`（AArch32）だけです。
+- rust-sel4 の `sel4-capdl-initializer` は、`capdl-loader-app` と同じ目的の別実装です。この実装に対する証明は、README と文書に記載がありません（未確認として、証明なしと扱います）。
+
+## 判断の材料
+
+| 案 | 初期化の証明 | 記述の生成 | 部品の言語 | 利点 | 欠点 |
+|---|---|---|---|---|---|
+| A: CAmkES 3.13.1 | `capdl-loader-app`（model のレベル） | CAmkES の ADL から capDL を生成 | C | 17.0.0 と同じ commit で組み合わせが公開されている。connector（RPC、dataport、event）が揃う | Python・Haskell・Jinja を含む大きな toolchain。生成される glue code は証明されていない |
+| B: capDL を直接使う、自作の小さな記述 | `capdl-loader-app`（model のレベル） | `python-capdl-tool` を使う自作の generator | C と Rust | 記述が小さく、capability の表と capDL を 1 対 1 で照合できる。Microkit に近い形にできる | generator と IPC の規約を自作する |
+| C: rust-sel4 と `sel4-capdl-initializer` | なし | 自作 | Rust | Rust の型で IPC を書ける | 初期化の証明を失う |
+| D: Microkit を AArch32 に移植 | なし（Microkit の monitor は証明されていない） | Microkit の SDF | C と Rust | sDDF の部品を使える | 上流に AArch32 の対応がなく、移植と追従の工数が大きい |
+
+## 推奨と決定（推奨の理由は推測を含む）
+
+- **B を推奨します。** 初期化の証明がある `capdl-loader-app` を root task とし、system の記述を capDL で静的に固定します。capability の分配は capDL の仕様から機械的に確かめられます（「部品 X が資源 Y に届くか」）。
+- 部品は C を基本とし、証明や検査の道具（Frama-C、CBMC、Kani、Verus）との相性を形式検証の調査（`research/verification/`）で比べてから、Rust を使う範囲を決めます。
+- A は、B の generator が大きくなりすぎた場合の代わりとして残します。CAmkES の connector の設計は参考にします。
+- sDDF の設計（方向が決まった共有メモリの queue と通知、driver と virtualiser の分離）は、コードを使わずに考え方として取り入れます。
+- smoke test（task 17）は、capDL を使う前に、最小の root task で起動と UART を確かめる段階から始めます。
+
+**決定（2026-11-11、利用者の判断）:** 案 B を採ります。
 
 ## 未確認
 
-- CAmkES と capDL tool の現在の保守状況と、seL4 17.0.0 との組み合わせ。
+- `capdl-loader-app` と capDL tool 0.6.1 を、seL4 17.0.0 の AArch32 `bcm2837` で build できるか。
+- `sys-init` の証明が仮定する kernel の API と、17.0.0 の API の対応。
 - Microkit を AArch32 に移植する工数。
