@@ -62,6 +62,13 @@ class ConsistencyTest(unittest.TestCase):
     def errors(self) -> list[str]:
         return check_pins.consistency(self.repo.root)
 
+    def test_patch_preimages(self) -> None:
+        text = (
+            "header\n--- a/src/x.c\n+++ b/src/x.c\n@@ -1,3 +1,4 @@\n"
+            " keep\n-old\n+new\n \n"
+        )
+        self.assertEqual(check_pins.patch_preimages(text), [("src/x.c", "keep\nold\n")])
+
     def test_accepts_consistent_pins(self) -> None:
         self.assertEqual(self.errors(), [])
 

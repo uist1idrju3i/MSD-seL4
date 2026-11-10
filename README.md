@@ -19,7 +19,7 @@ MSD/seL4 は、M5Stack CardputerZero（Raspberry Pi CM0 = BCM2837、Cortex-A53�
 
 開発の準備段階です。OS の実装、ビルド、実機での確認はまだありません。
 
-- seL4 kernel: 17.0.0 を使い、検証済み構成 `ARM_bcm2837_verified`（AArch32、単一コア）を既定にする方針です。
+- seL4 kernel: 17.0.0 を使い、検証済み構成 `ARM_bcm2837_verified`（AArch32、単一コア）を既定にする方針です。17.0.0 は改変なしでは起動処理の途中で止まるため、起動処理を直す patch（`patches/seL4/`）を build 時に当てています（[差分](research/sel4/verified-config-deviations.md)）。
 - driver: すべて未着手です。driver ごとに調査と計画を立ててから実装します。
 
 ## 形式検証の範囲
@@ -28,7 +28,7 @@ MSD/seL4 を「全体が検証済みのシステム」とは呼びません。�
 
 | 部品 | 確かめる方法 | 現在 |
 |---|---|---|
-| seL4 kernel（`ARM_bcm2837_verified`） | seL4 の証明（機能正当性、access control、情報フロー、バイナリ正当性） | 証明は上流にある。検証済み構成で build できることを CI で確認 |
+| seL4 kernel（`ARM_bcm2837_verified`） | seL4 の証明（機能正当性、access control、情報フロー、バイナリ正当性） | 証明は上流にあり、改変なしの source が対象。起動処理の patch を当てた source では証明を再実行していない。検証済み構成で build でき、QEMU で root task が起動することを CI で確認 |
 | system の初期化（capDL） | 初期化の algorithm の証明（model のレベル）と、仕様の検査 | 未着手 |
 | IPC の契約、driver、storage、更新 | 部品ごとに、証明、model 検査、静的解析、試験を選ぶ | 未着手 |
 | 起動（ROM、GPU firmware、elfloader） | 試験と review だけ（形式検証の対象外） | 未確認 |

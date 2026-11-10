@@ -4,7 +4,7 @@
 
 | path | upstream | 固定先 | ライセンス | 採用の理由 |
 |---|---|---|---|---|
-| `vendor/seL4` | https://github.com/seL4/seL4 | tag `17.0.0`（commit `62e345c240a15671484530b4e6e069ce266c28d7`、2026-10-30） | kernel は主に GPL-2.0-only、`libsel4` は BSD-2-Clause | 製品の kernel。改変せずに build する |
+| `vendor/seL4` | https://github.com/seL4/seL4 | tag `17.0.0`（commit `62e345c240a15671484530b4e6e069ce266c28d7`、2026-10-30） | kernel は主に GPL-2.0-only、`libsel4` は BSD-2-Clause | 製品の kernel。`patches/seL4/` の patch を build 時の写しに当てる（[差分](../sel4/verified-config-deviations.md)） |
 | `vendor/seL4_tools` | https://github.com/seL4/seL4_tools | `master` の `6493e0c6fab360eb81a8115a49c9ca7bc280c48a`（`seL4/sel4test-manifest` の tag `17.0.0` が指す commit） | elfloader-tool と cmake-tool は主に GPL-2.0-only、一部 BSD-2-Clause・BSD-3-Clause | seL4 を起動する elfloader と、root task を含む image を作る CMake の helper。改変せずに build する。tag がないため、seL4 の release の manifest が指す commit に合わせる |
 | `vendor/sel4runtime` | https://github.com/seL4/sel4runtime | `master` の `86489cf6efab9f314964e79468c036e9035394c7`（`seL4/sel4test-manifest` の tag `17.0.0` が指す commit、2025-03-17） | 主に BSD-2-Clause。一部 MIT（`memcpy.c`、`memset.c`、`elf.h` など）、文書は CC-BY-SA-4.0 | root task の起動処理（C runtime、BootInfo の受け取り）。smoke test の root task が使う。改変せずに build する |
 | `vendor/util_libs` | https://github.com/seL4/util_libs | `master` の `ef49a397b7044fc38b609a99a8c6265a97913b8e`（`seL4/sel4test-manifest` の tag `17.0.0` が指す commit、2026-10-27） | 使うのは `libcpio` だけで BSD-2-Clause。repository 全体には GPL などの部品もあるが build しない | elfloader が image の中の kernel と root task を CPIO から取り出すのに使う。改変せずに build する |
