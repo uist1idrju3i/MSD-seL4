@@ -43,7 +43,7 @@
 ### bootinfo の shared frame
 
 - `libsel4/include/sel4/bootinfo_types.h` の `sharedFrames` は「shared-frame caps（seL4 node 間で共有）」の欄です。
-- ARM と RISC-V の `src/arch/*/kernel/boot.c` は `S_REG_EMPTY` を設定し、コメントに「no shared-frame caps（ARM/RISC-V has no multikernel support）」とあります。x86 だけが `ksNumCPUs` を渡します。instance 間で capability を受け渡す公式の経路は、ARM では未実装です。
+- ARM と RISC-V の `src/arch/*/kernel/boot.c` は `S_REG_EMPTY` を設定し、コメントに「no shared-frame caps（ARM/RISC-V has no multikernel support）」とあります。x86 は `sharedFrames` を代入しませんが、`populate_bi_frame`（`src/kernel/boot.c`）が bootinfo frame を clear するため、結果は同じく空です。つまり 17.0.0 ではどのアーキテクチャでも `sharedFrames` は空で、instance 間で capability を受け渡す公式の経路は未実装です。なお bootinfo の `numNodes` は、x86 が `ksNumCPUs`（実行時の CPU 数）、ARM と RISC-V が `CONFIG_MAX_NUM_NODES`（構成時の値）を渡します。
 
 ### 関連する動き
 
@@ -62,8 +62,6 @@
 - 以上から、bcm2837 で seL4 の SMP を使うには kernel への patch（例: ARM local regs の mailbox を使う IPI の実装）が必要で、しかも未検証の構成になります。SMP は現実的な選択肢ではありません。
 
 ### マルチカーネル
-
-### 構成の要素ごとの状況
 
 - メモリ: 512 MiB を静的に分割します。`overlay-rpi3.dts` の `memory` の `reg` と reserved-memory（先頭の 4 KiB は armstub 用）を instance ごとの overlay で与える形が、CAVEATS の想定と合います。
 - コア間シグナル: SGI が使えないため代替が必要です。候補は BCM2836 の core ごとの local regs（`0x40000000`）の mailbox 系 register（`coreMailboxesIrqCtrl`、`coreMailboxWriteset`、`coreMailboxRW`）です。この page は kernel が予約しており、userland からは触れません。他コアへ IRQ を出せるかは BCM2835/6/7 の peripheral 資料で要確認で、kernel 変更なしに user-level で実現できるかは未確認です。
@@ -89,7 +87,7 @@
 
 ## 出典
 
-- `vendor/seL4`（commit `62e345c240a15671484530b4e6e069ce266c28d7`）: `CAVEATS.md`、`CHANGES.md`、`config.cmake`、`src/arch/arm/kernel/boot.c`、`src/arch/arm/object/interrupt.c`、`src/smp/ipi.c`、`src/arch/arm/machine/gic_v2.c`、`src/arch/arm/machine/gic_v3.c`、`include/drivers/irq/bcm2836-armctrl-ic.h`、`include/arch/arm/arch/machine/gic_common.h`、`src/arch/arm/32/head.S`、`src/plat/bcm2837/overlay-rpi3.dts`、`tools/dts/rpi3.dts`
+- `vendor/seL4`（commit `62e345c240a15671484530b4e6e069ce266c28d7`）: `CAVEATS.md`、`CHANGES.md`、`config.cmake`、`src/kernel/boot.c`、`src/arch/arm/kernel/boot.c`、`src/arch/riscv/kernel/boot.c`、`src/arch/x86/kernel/boot.c`、`src/arch/arm/object/interrupt.c`、`src/smp/ipi.c`、`src/arch/arm/machine/gic_v2.c`、`src/arch/arm/machine/gic_v3.c`、`include/drivers/irq/bcm2836-armctrl-ic.h`、`include/arch/arm/arch/machine/gic_common.h`、`src/arch/arm/32/head.S`、`src/plat/bcm2837/overlay-rpi3.dts`、`tools/dts/rpi3.dts`
 - `vendor/seL4_tools`（commit `6493e0c6fab360eb81a8115a49c9ca7bc280c48a`）: `elfloader-tool/src/arch-arm/drivers/smp-spin-table.c`、`elfloader-tool/src/arch-arm/smp_boot.c`
 - [RFC-17: seL4 multikernel IPI API](https://sel4.github.io/rfcs/implemented/0170-multikernel-ipi-api.html)（2026-11-11 取得）
 - [seL4 FAQ](https://sel4.systems/About/FAQ.html)（2026-11-11 取得）

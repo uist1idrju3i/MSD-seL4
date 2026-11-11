@@ -6,7 +6,7 @@
 
 ### 追加
 
-- seL4 の SMP とマルチカーネルの調査を `research/sel4/multicore.md` に加え、将来計画を `research/roadmap.md` として新設して「マルチカーネル対応」を記録しました。SMP は bcm2837 に upstream の IPI 実装がなく採用せず、マルチカーネルはコア間シグナル・IRQ の分割・複数 kernel image の起動に未整備の部分があり、kernel patch が要る可能性があることなどを書きました。実機と QEMU では何も試していません。
+- seL4 の SMP とマルチカーネルの調査を `research/sel4/multicore.md` に加え、将来計画を `research/roadmap.md` として新設して「マルチカーネル対応」を記録しました。`research/sel4/verified-platforms.md` にも、アーキテクチャごとの SMP とマルチカーネルの対応状況を追記しました。SMP は bcm2837 に upstream の IPI 実装がなく採用せず、マルチカーネルはコア間シグナル・IRQ の分割・複数 kernel image の起動に未整備の部分があり、kernel patch が要る可能性があることなどを書きました。実機と QEMU では何も試していません。
 
 - CI の構成と動かす条件の判断、ruleset との関係、開発用 image の中身の判断を `research/ci.md` に記録しました。
 

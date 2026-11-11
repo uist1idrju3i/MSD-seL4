@@ -6,6 +6,7 @@ seL4 kernel の証明が、どのアーキテクチャのどの platform（SoC�
 
 - `vendor/seL4`（tag `17.0.0`、`62e345c2`）の `configs/*_verified.cmake`、`configs/include/*_verified_include.cmake`、`src/plat/<platform>/config.cmake`。
 - seL4 の文書のリポジトリ（`seL4/docs`、commit `97021d2f`、2026-11-03）の `projects/sel4/verified-configurations.md` と `Hardware/*.md` の front matter（`platform`、`soc`、`cpu`、`verification`、`Maintained`）。
+- SMP とマルチカーネルの節は、`vendor/seL4/CAVEATS.md`、`config.cmake`、kernel source（`src/smp/`、`src/arch/*/object/interrupt.c`、`include/drivers/irq/`）、seL4 の公式 FAQ・roadmap、RFC-17 を根拠にします。詳細は [multicore.md](multicore.md) にあります。
 
 表の CPU は、Arm では `src/plat/<platform>/config.cmake` の `KernelArmCortex*` から取りました。RISC-V と SoC の名前は `Hardware/*.md` の記載です。
 
@@ -26,6 +27,36 @@ seL4 kernel の証明が、どのアーキテクチャのどの platform（SoC�
 - `KernelBinaryVerificationBuild ON` は `ARM`（`ARM_HYP` も同じ include を使う）と `RISCV64` にあり、`AARCH64` にはありません。文書のとおり、AArch64 のバイナリ正当性はまだありません。
 - `AARCH64` は `KernelArmSMMU OFF`、`KernelAllowSMCCalls ON` です。
 - どの構成も、SMMU・IOMMU、debug・profiling・printing、起動時の kernel の初期化（boot code）を証明の対象にしていません。
+
+## SMP とマルチカーネルの対応状況
+
+kernel の証明とは別に、SMP と static multi-kernel の構成が seL4 17.0.0 でどこまで使えるかをまとめます。SMP とマルチカーネルは、どのアーキテクチャでも検証済み構成の対象外です（マルチカーネルの検証は AArch64 で初期作業が始まっていますが、完了していません）。
+
+### SMP
+
+| アーキテクチャ | 状態 | 条件と制約 |
+|---|---|---|
+| ARM（AArch32） | あり | IPI の送信は GIC v2/v3 の platform にだけ実装があります。GIC のない platform（bcm2837 の `bcm2836-armctrl-ic`、am335x、omap3）は SMP を構成できません。SMP+MCS に対応する Armv7-a のボードはありません |
+| ARM_HYP（AArch32、EL2） | あり | hypervisor との組み合わせは generally stable とされますが、検証はありません |
+| AARCH64 | あり | SMP+MCS+hypervisor は AArch64 だけが対応し、odroidc4、tx1、tx2 でテストされています |
+| RISCV64 | あり | SBI 経由の IPI です |
+| X64 | あり | APIC 経由の IPI です |
+
+- SMP+MCS は experimental で、テスト済みの表記は hifive、tqma8xqp1gb、odroidc4、zynqmp、tx1、tx2、pc99-32、pc99-64 です（CAVEATS.md）。SMP と domain scheduler の組み合わせはサポートされません。
+- `KernelMaxNumNodes` を 1 より大きくすると `ENABLE_SMP_SUPPORT` が有効になり、`KernelNumDomains EQUAL 1` が必要です。検証済み構成はすべて `KernelMaxNumNodes 1`・`KernelNumDomains 16`（domain scheduler）なので、SMP は検証済み構成のどれとも両立しません。
+
+### マルチカーネル
+
+| アーキテクチャ | 状態 | 条件と制約 |
+|---|---|---|
+| AARCH64 | 検証がロードマップにあり、初期作業が始まっています（未完了） | 公式 roadmap は Proofcraft のプロジェクトを Q3/28 完了予定としています |
+| ARM / ARM_HYP（AArch32） | 構成可能（kernel の変更なし、instance ごとの DT overlay）ですが、検証の予定は AArch64 だけです | SGI signal は GIC の platform にだけあります（`NUM_SGIS=16`）。bcm2837 は `NUM_SGIS 0` で使えません。IRQ controller のアクセス管理は upstream も計画中です |
+| RISCV64 | 構成可能ですが、検証の予定は AArch64 だけです | SBI の software interrupt を使います |
+| X64 | 構成可能ですが、検証の予定は AArch64 だけです | APIC の IPI を使います |
+
+- コア間の割り込み API（SGI signal、seL4 14.0.0、RFC-17）は、SMP を使わない構成でだけ有効です。
+- bootinfo の `sharedFrames`（node 間で共有する frame capability の欄）は、17.0.0 ではどのアーキテクチャでも空です。ARM と RISC-V は `S_REG_EMPTY` を明示し（「multikernel support なし」のコメント）、x86 は代入していません（`populate_bi_frame` が frame を clear します）。instance 間で capability を受け渡す公式の経路は未実装です。
+- 各 instance は検証済み構成（single node）をそのまま使えますが、メモリの分割、共有メモリの protocol、IRQ の分割、loader は証明の外です。
 
 ## platform の一覧（seL4 17.0.0）
 
@@ -117,3 +148,4 @@ Cheshire の「CVA6 系」は、文書の CPU 欄（`Cheshire`）からの推測
 - `ARM` は、5 つの性質がすべてそろうアーキテクチャです（バイナリ正当性と capDL の初期化子を含みます）。`AARCH64` には、バイナリ正当性も capDL の初期化子の証明もまだありません。D1 で AArch32 を選んだ理由の一つです。
 - `ARM` には FPU の context switch がありません。音声の処理や camera の画像処理のように浮動小数点を使う userland の部品は、固定小数点で書くか、検証済み構成からの差分として記録します（[verified-config-deviations.md](verified-config-deviations.md)）。
 - 同じ SoC 系列で AArch64 の証明がある Raspberry Pi 4B（BCM2711）と 5B（BCM2712）は、CM0 と pin 互換ではありません。CardputerZero では使えません。
+- SMP は bcm2837 では構成できません（IPI の実装が GIC v2/v3 にしかなく、`KernelNumDomains=1` 必須のため検証済み構成とも両立しません）。マルチカーネルは seL4 が保証向上の中間ステップと位置づける方向ですが、bcm2837 では SGI、`sharedFrames`、IRQ の分割、複数 kernel image の loader が未整備で、kernel patch が要る可能性があります（[multicore.md](multicore.md)）。
