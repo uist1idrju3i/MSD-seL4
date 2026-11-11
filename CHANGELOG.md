@@ -6,6 +6,8 @@
 
 ### 追加
 
+- seL4 の SMP とマルチカーネルの調査を `research/sel4/multicore.md` に加え、`research/README.md` に将来計画として「マルチカーネル対応」を記録しました。SMP は bcm2837 に upstream の IPI 実装がなく採用せず、マルチカーネルはコア間シグナル・IRQ の分割・複数 kernel image の起動に未整備の部分があり、kernel patch が要る可能性があることなどを書きました。実機と QEMU では何も試していません。
+
 - CI の構成と動かす条件の判断、ruleset との関係、開発用 image の中身の判断を `research/ci.md` に記録しました。
 
 - CardputerZero の driver ごとの調査を `research/drivers/` に加えました。SoC の共通の部品（GPIO、mailbox、I2C、SPI、DMA など）と、LCD、キーボード、M5IOE1、電源異常、RTC、電池、microSD、USB、音声、IMU、IR、HDMI、無線、カメラ、拡張端子です。mailbox が kernel の割り込み controller と同じ page にあることなど、部品の分け方に関わる点と、作る順序の案を書きました。割り込み controller と mailbox が同じ page にあることが kernel の証明の前提に触れる点（`research/sel4/shared-intc-page.md`）と、実機の確認の計画（`research/experiments/hardware-checklist.md`）も加えました。実機では何も確かめていません。

@@ -16,6 +16,12 @@ MSD/seL4 の内部文書です。公開サイトは `docs/` にあります。�
 | D8 | PR の分け方 | 主題ごとに stacked PR |
 | - | driver | すべてユーザー空間に自作する。driver ごとに深い調査と深い計画を立ててから実装する |
 
+## 将来計画
+
+| 項目 | 状態 |
+|---|---|
+| マルチカーネル対応 | 調査済み（[sel4/multicore.md](sel4/multicore.md)）。bcm2837 ではコア間シグナル、IRQ の分割、複数 kernel image の起動に未整備の部分があり、kernel patch が要る可能性があります。SMP は bcm2837 に upstream の IPI 実装がなく、採用しません |
+
 ## 文書
 
 | 文書 | 内容 |
@@ -30,6 +36,7 @@ MSD/seL4 の内部文書です。公開サイトは `docs/` にあります。�
 | [sel4/system-architecture.md](sel4/system-architecture.md) | 部品の分け方と、capability・IPC・IRQ・MMIO・DMA・fault の設計方針 |
 | [hardware/inventory.md](hardware/inventory.md) | CardputerZero の device と接続 |
 | [sel4/shared-intc-page.md](sel4/shared-intc-page.md) | 割り込み controller と mailbox が同じ page にあることと、kernel の証明の前提 |
+| [sel4/multicore.md](sel4/multicore.md) | seL4 の SMP とマルチカーネルの仕組み、検証の状況、bcm2837 での実現性 |
 | [experiments/hardware-checklist.md](experiments/hardware-checklist.md) | 実機の確認の計画（手順と合否の基準） |
 | [drivers/README.md](drivers/README.md) | driver ごとの状況 |
 | [drivers/dma-iommu.md](drivers/dma-iommu.md) | IOMMU がないことの影響、PIO と DMA の方針の案、QEMU で確かめられる範囲 |
