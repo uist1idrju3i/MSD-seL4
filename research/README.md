@@ -16,16 +16,11 @@ MSD/seL4 の内部文書です。公開サイトは `docs/` にあります。�
 | D8 | PR の分け方 | 主題ごとに stacked PR |
 | - | driver | すべてユーザー空間に自作する。driver ごとに深い調査と深い計画を立ててから実装する |
 
-## 将来計画
-
-| 項目 | 状態 |
-|---|---|
-| マルチカーネル対応 | 調査済み（[sel4/multicore.md](sel4/multicore.md)）。bcm2837 ではコア間シグナル、IRQ の分割、複数 kernel image の起動に未整備の部分があり、kernel patch が要る可能性があります。SMP は bcm2837 に upstream の IPI 実装がなく、採用しません |
-
 ## 文書
 
 | 文書 | 内容 |
 |---|---|
+| [roadmap.md](roadmap.md) | 将来計画（検討中の項目と状態） |
 | [sel4/verified-configuration.md](sel4/verified-configuration.md) | 検証済み構成、証明された性質、前提、対象外の部分 |
 | [sel4/verified-config-deviations.md](sel4/verified-config-deviations.md) | 検証済み構成からの差分の一覧 |
 | [sel4/verified-platforms.md](sel4/verified-platforms.md) | 形式検証済みのアーキテクチャと、platform ごとの SoC・CPU の一覧 |

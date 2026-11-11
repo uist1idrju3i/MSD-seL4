@@ -73,6 +73,8 @@
 
 ## 選択肢と進め方
 
+将来計画への記録は [../roadmap.md](../roadmap.md) にあります。
+
 - SMP は bcm2837 では upstream の実装がなく、検証もありません。採用する理由がありません。
 - マルチカーネルは seL4 が「より高い保証への中間ステップ」と位置づける方向で、検証済みの単一ノード kernel を各コアで使い続けられる点が製品の方針と合います。一方で、bcm2837 ではコア間シグナル、IRQ 分割、複数 image の起動が未整備で、kernel patch が必要になる可能性があります。
 - 投資するなら、まず QEMU で 2 つの kernel instance を起動する実験（loader の検討を含む）から始め、kernel patch が必要になった時点で [検証済み構成からの差分](verified-config-deviations.md) の手続きに乗せます。
