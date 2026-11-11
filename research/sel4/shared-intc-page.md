@@ -36,9 +36,9 @@ user の component が割り込み controller の register（mask の set・clea
 
 C は、mailbox を使えなくなる点で B と同じで、kernel の差分が増えるだけです。
 
-## 推奨と、利用者の判断
+## 決定（2026-11-11）
 
-推奨は A です。
+利用者の判断で A に決めました。
 
 - 理由: mailbox がないと、clock、電源、HDMI の frame buffer を使えず、「全 hardware を使う」目標に届きません。mailbox の driver は、どの案でも VideoCore の DMA によって TCB に入ります。
 - 条件:
@@ -46,7 +46,7 @@ C は、mailbox を使えなくなる点で B と同じで、kernel の差分が
   - mailbox の driver は、mailbox の register の offset（`0x880`〜`0x8BF`）だけに access する。この性質を、driver の検証の目標（[kernel 以外の形式検証](../verification/beyond-kernel.md)）に加える。
   - [検証済み構成からの差分](verified-config-deviations.md) には、kernel の差分ではなく証明の前提として記録する。
 
-mailbox の driver を実装する前に、A・B・C のどれにするかを決めていただきます。
+B と C は、mailbox が使えなくなるため採りません。
 
 ## 確かめていないこと
 

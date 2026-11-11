@@ -32,6 +32,8 @@
 
 ### 変更
 
+- 割り込み制御器と mailbox が同じ page にあることの扱いを、案 A（page は mailbox の driver だけに渡し、割り込み制御器の register を書かないことを driver の検証の対象にする）に決めました（`research/sel4/shared-intc-page.md`）。
+
 - README を読者別の入口、今の状態、試し方の構成に書き直しました。公開サイト（`docs/`）の開発状況、開発環境、設計の柱と、DeepWiki の設定（`.devin/wiki.json`）を、driver の調査、DMA の方針、Rust の smoke test、割り込み制御器の page の前提に合わせて更新しました。
 
 - 開発用 image に rust-sel4 v6.0.0 の nightly（`nightly-2026-08-21`、`rust-src`、`llvm-tools-preview`）と libclang を入れ、CI の `kernel-verified` で Rust の root task を build して QEMU raspi3b で起動するようにしました。使っていなかった安定版の Rust 1.99.1、curl、xz-utils は image から外しました。`pins-check` は安定版の Rust の代わりに rust-sel4 の release を追います。
