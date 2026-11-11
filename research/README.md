@@ -20,6 +20,7 @@ MSD/seL4 の内部文書です。公開サイトは `docs/` にあります。�
 
 | 文書 | 内容 |
 |---|---|
+| [roadmap.md](roadmap.md) | 将来計画（検討中の項目と状態） |
 | [sel4/verified-configuration.md](sel4/verified-configuration.md) | 検証済み構成、証明された性質、前提、対象外の部分 |
 | [sel4/verified-config-deviations.md](sel4/verified-config-deviations.md) | 検証済み構成からの差分の一覧 |
 | [sel4/verified-platforms.md](sel4/verified-platforms.md) | 形式検証済みのアーキテクチャと、platform ごとの SoC・CPU の一覧 |
@@ -30,6 +31,7 @@ MSD/seL4 の内部文書です。公開サイトは `docs/` にあります。�
 | [sel4/system-architecture.md](sel4/system-architecture.md) | 部品の分け方と、capability・IPC・IRQ・MMIO・DMA・fault の設計方針 |
 | [hardware/inventory.md](hardware/inventory.md) | CardputerZero の device と接続 |
 | [sel4/shared-intc-page.md](sel4/shared-intc-page.md) | 割り込み controller と mailbox が同じ page にあることと、kernel の証明の前提 |
+| [sel4/multicore.md](sel4/multicore.md) | seL4 の SMP とマルチカーネルの仕組み、検証の状況、bcm2837 での実現性 |
 | [experiments/hardware-checklist.md](experiments/hardware-checklist.md) | 実機の確認の計画（手順と合否の基準） |
 | [drivers/README.md](drivers/README.md) | driver ごとの状況 |
 | [drivers/dma-iommu.md](drivers/dma-iommu.md) | IOMMU がないことの影響、PIO と DMA の方針の案、QEMU で確かめられる範囲 |
