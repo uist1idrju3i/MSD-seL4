@@ -6,6 +6,8 @@
 
 ### 追加
 
+- CI の構成と動かす条件の判断、ruleset との関係、開発用 image の中身の判断を `research/ci.md` に記録しました。
+
 - CardputerZero の driver ごとの調査を `research/drivers/` に加えました。SoC の共通の部品（GPIO、mailbox、I2C、SPI、DMA など）と、LCD、キーボード、M5IOE1、電源異常、RTC、電池、microSD、USB、音声、IMU、IR、HDMI、無線、カメラ、拡張端子です。mailbox が kernel の割り込み controller と同じ page にあることなど、部品の分け方に関わる点と、作る順序の案を書きました。割り込み controller と mailbox が同じ page にあることが kernel の証明の前提に触れる点（`research/sel4/shared-intc-page.md`）と、実機の確認の計画（`research/experiments/hardware-checklist.md`）も加えました。実機では何も確かめていません。
 
 - `vendor/` に seL4 17.0.0、yomiyasu v2.5.0、m5stack-linux-dtoverlays を shallow submodule で追加しました。
