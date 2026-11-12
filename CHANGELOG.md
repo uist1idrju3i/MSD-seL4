@@ -6,6 +6,8 @@
 
 ### 追加
 
+- Rust CapDL initializer から C の serial/client を起動する経路と QEMU runner を追加しました。TOML の権限・ELF を照合し、request/reply と client の未 mapping の PL011 read の VM fault を試験します。add-spec 前は debug 情報だけを strip し、埋め込み後は copy だけにします。正負各五回の結果と送信なしの対照を記録しました。kernel は同じ verified configuration と既存 boot patch だけです。実機と製品用 driver は未確認です。
+
 - TOML の静的 system 宣言から AArch32 capDL と capability 表を作る標準ライブラリだけの generator を追加しました。serial/client の宣言と生成表、parser JSON の CSpace・VSpace を照合する独立 checker、拒否・決定性・mutation の試験を加えました。component と boot の実装は後続 PR です。
 
 - capDL の JSON tool（coliasgroup/capdl `26b8d39`）を専用 Docker stage で build し、strip 済み `parse-capDL` を開発用 image に追加しました。GHC 9.10.3、Stack 3.7.1、lts-24.32 と配布物の SHA-256 を固定し、schema fixture と pin 検査を加えました。

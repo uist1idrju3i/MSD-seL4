@@ -118,7 +118,26 @@ Haskell tool は host image の専用 stage で build します。最終 image �
 
 `tools/capdl/check.py` は生成器を呼ばずに parse-capDL の JSON の TCB→CSpace をたどり、宣言と slot・対象・型・rights・badge が完全一致するかを検査します。VSpace と device の物理アドレス、frame fill も照合します。未知の key、untyped/CNode/TCB grant、無許可の grant 権、kernel device との重なり、DMA marker の不足を拒否します。schema と ELF reader は共有するため、検査器同士の一致を形式証明とは扱いません。
 
-[schema と checker の仕様](capdl-generator.md)に全 key・CLI・拒否条件を、[生成した表](serial-client-capabilities.md)に PR 3 用 serial/client の権限を記録します。component ELF の実装と新しい起動経路は後続 PR です。
+[schema と checker の仕様](capdl-generator.md)に全 key・CLI・拒否条件を、[生成した表](serial-client-capabilities.md)に serial/client の権限を記録します。
+
+## 二つの C component を起動する（PR 3）
+
+`projects/capdl/build.sh` が verified configuration と既存の boot patch の写しで C component を build します。musl は使いません。sel4runtime の ARM CRT の `_start` から、この project の `__sel4_start_c` に入ります。CapDL は SP とゼロ初期化した RAM を渡しますが、System V の argc/auxv は渡さないため、通常の runtime の main 起動処理を呼びません。一 thread/PD に限定し、libsel4 の thread-local IPC pointer を userland の option `LibSel4UseThreadLocals=OFF` で global にし、TOML から生成した IPC address を設定します。kernel の TLS/IPC 設定は変えません。
+
+同じ TOML から生成した slot/address の header を C が使います。object-size YAML は実際の libsel4 header を preprocess した値です。unit-test のサイズを流用しません。`.cdl` を生成・check し、固定 parser の JSON を add-spec に渡します。Rust source は rust-smoke の固定 Cargo dependency から取得し、その checkout の Cargo.lock で initializer と host add-spec を `--locked` build します。nightly も rust-smoke の toolchain file から読み、minimal AArch32 root-task target、default deflate、alloc なしを使います。
+
+initializer は **add-spec 前に `strip --strip-debug`** します。full strip は add-spec が patch する symbol まで消すので使えません。埋め込んだ後は `tools/capdl/copy-rootserver.sh` で byte copy だけにし、elfloader が pack する rootserver と元の ELF を `cmp` します。kernel の pack も copy です。seL4_tools と vendor は変更しません。生成した image は既存の AArch32 entry stub で QEMU raspi3b に渡します。
+
+```sh
+docker/msd-sel4-dev tools/qemu-capdl.sh build/capdl-positive positive local-positive
+docker/msd-sel4-dev tools/qemu-capdl.sh build/capdl-negative negative local-negative
+```
+
+引数は build directory、`positive|negative|silent`、run ID です。`QEMU_TIMEOUT` は正の整数秒で既定 10、`QEMU_CAPDL_SKIP_BUILD=1` は保存済み binary を hash 照合して再利用します。run ID は英数字・`_-` のみで、既存の run directory は上書きしません。silent は送信を止める対照で、runner が失敗することを期待します。将来の rebuild 前には古い binary と log を保存してください。
+
+serial は badge 1・長さ 2・request の内容を確認して marker を出し、Reply します。client は reply を検査して二度目の Call で ACK を送り、serial の二つ目の marker によって往復も確認します。negative だけがその後に未 mapping の PL011 物理アドレスを read します。serial は badge 2・VMFault・長さ・data abort・アドレスと protocol の状態を確認して fault marker を出し、reply せず止めます。client には device の cap も mapping もありません。
+
+runner は log 全体が正しい順の marker だけであることと、QEMU の終了値が期待した timeout の 124 であることを要求します。marker の後の error や異常終了も成功にはしません。CI は両 mode を一回ずつ実行します。[実験記録](../experiments/2026-11-12-capdl-qemu.md)には各五回と送信なしの対照を残します。これは polling UART を使う基盤の試験で、実機の clock/pin/IRQ 初期化を備えた driver ではありません。
 
 ## 証明の範囲
 

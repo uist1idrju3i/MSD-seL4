@@ -19,7 +19,7 @@ import generate
 import report
 import schema
 
-SYSTEM = ROOT / "projects/capdl/system.toml"
+SYSTEM = ROOT / "tests/capdl/fixture.toml"
 MODEL = schema.load(SYSTEM)
 
 
@@ -257,6 +257,9 @@ class Parser(Workspace):
     def test_parsed_valid(self):
         result = subprocess.run(self.command, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def test_project_system(self):
+        self.parse_model(schema.load(ROOT / "projects/capdl/system.toml"))
 
     def parse_model(self, model):
         schema.validate(model)

@@ -1,0 +1,35 @@
+# SPDX-License-Identifier: BSD-3-Clause
+cmake_minimum_required(VERSION 3.16.0)
+project(msd-sel4-capdl NONE)
+get_filename_component(repo_root "${CMAKE_CURRENT_LIST_DIR}/../.." REALPATH)
+set(KERNEL_PATH "${repo_root}/vendor/seL4" CACHE PATH "")
+list(APPEND CMAKE_MODULE_PATH "${repo_root}/vendor/musllibc" "${repo_root}/vendor/sel4runtime")
+include("${repo_root}/vendor/seL4/configs/ARM_bcm2837_verified.cmake")
+set(ElfloaderImage "elf" CACHE STRING "" FORCE)
+set(CMAKE_BUILD_TYPE "Release" CACHE STRING "")
+set(LibSel4FunctionAttributes "public" CACHE STRING "" FORCE)
+# These components have one thread and use the global IPC buffer pointer.
+set(LibSel4UseThreadLocals OFF CACHE BOOL "" FORCE)
+# This project only packs an initializer stripped before add-spec.
+set(CMAKE_STRIP "${repo_root}/tools/capdl/copy-rootserver.sh" CACHE FILEPATH "" FORCE)
+include("${repo_root}/vendor/seL4_tools/cmake-tool/base.cmake")
+add_subdirectory("${repo_root}/vendor/util_libs/libcpio" libcpio)
+find_package(sel4runtime REQUIRED)
+sel4runtime_import_project()
+include(rootserver)
+
+set(CAPDL_TEST_MODE 0 CACHE STRING "0: positive, 1: unmapped access, 2: silent control")
+foreach(component serial client)
+    add_executable(${component} ${component}.c)
+    set_target_properties(${component} PROPERTIES SUFFIX ".elf" LINK_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/component.lds")
+    target_include_directories(${component} PRIVATE "${CMAKE_BINARY_DIR}/config")
+    target_compile_options(${component} PRIVATE -Wall -Wextra -Werror -fno-builtin -marm -mfloat-abi=soft)
+    target_compile_definitions(${component} PRIVATE CAPDL_TEST_MODE=${CAPDL_TEST_MODE})
+    target_link_options(${component} PRIVATE -nostdlib -static -Wl,--build-id=none "-Wl,-T,${CMAKE_CURRENT_LIST_DIR}/component.lds")
+    target_link_libraries(${component} PRIVATE sel4runtime sel4 gcc)
+endforeach()
+
+add_executable(capdl_root IMPORTED GLOBAL)
+set_target_properties(capdl_root PROPERTIES IMPORTED_LOCATION "${CMAKE_BINARY_DIR}/capdl_root")
+# The initializer was stripped before add-spec. Preserve all embedded segments.
+DeclareRootserver(capdl_root)

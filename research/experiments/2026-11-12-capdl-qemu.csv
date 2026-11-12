@@ -1,0 +1,11 @@
+run_id,mode,qemu_status,runner_status,request_count,reply_count,fault_count,pl011_sha256,pl011
+repeat-positive-1,positive,124,0,1,1,0,61c9ba495ed1ac23276329c2bfdfc066bf579412f095048b7394d69e7dc923c5,MSD-seL4 capdl: serial got badge 1 from client\r\nMSD-seL4 capdl: client checked reply\r\n
+repeat-positive-2,positive,124,0,1,1,0,61c9ba495ed1ac23276329c2bfdfc066bf579412f095048b7394d69e7dc923c5,MSD-seL4 capdl: serial got badge 1 from client\r\nMSD-seL4 capdl: client checked reply\r\n
+repeat-positive-3,positive,124,0,1,1,0,61c9ba495ed1ac23276329c2bfdfc066bf579412f095048b7394d69e7dc923c5,MSD-seL4 capdl: serial got badge 1 from client\r\nMSD-seL4 capdl: client checked reply\r\n
+repeat-positive-4,positive,124,0,1,1,0,61c9ba495ed1ac23276329c2bfdfc066bf579412f095048b7394d69e7dc923c5,MSD-seL4 capdl: serial got badge 1 from client\r\nMSD-seL4 capdl: client checked reply\r\n
+repeat-positive-5,positive,124,0,1,1,0,61c9ba495ed1ac23276329c2bfdfc066bf579412f095048b7394d69e7dc923c5,MSD-seL4 capdl: serial got badge 1 from client\r\nMSD-seL4 capdl: client checked reply\r\n
+repeat-negative-1,negative,124,0,1,1,1,63d6de8fe6517fdffb1d7042eaedd7dca7ecb173fd3a6e62f59fa2e3235a1ed4,MSD-seL4 capdl: serial got badge 1 from client\r\nMSD-seL4 capdl: client checked reply\r\nMSD-seL4 capdl: client faulted at 0x3f201000\r\n
+repeat-negative-2,negative,124,0,1,1,1,63d6de8fe6517fdffb1d7042eaedd7dca7ecb173fd3a6e62f59fa2e3235a1ed4,MSD-seL4 capdl: serial got badge 1 from client\r\nMSD-seL4 capdl: client checked reply\r\nMSD-seL4 capdl: client faulted at 0x3f201000\r\n
+repeat-negative-3,negative,124,0,1,1,1,63d6de8fe6517fdffb1d7042eaedd7dca7ecb173fd3a6e62f59fa2e3235a1ed4,MSD-seL4 capdl: serial got badge 1 from client\r\nMSD-seL4 capdl: client checked reply\r\nMSD-seL4 capdl: client faulted at 0x3f201000\r\n
+repeat-negative-4,negative,124,0,1,1,1,63d6de8fe6517fdffb1d7042eaedd7dca7ecb173fd3a6e62f59fa2e3235a1ed4,MSD-seL4 capdl: serial got badge 1 from client\r\nMSD-seL4 capdl: client checked reply\r\nMSD-seL4 capdl: client faulted at 0x3f201000\r\n
+repeat-negative-5,negative,124,0,1,1,1,63d6de8fe6517fdffb1d7042eaedd7dca7ecb173fd3a6e62f59fa2e3235a1ed4,MSD-seL4 capdl: serial got badge 1 from client\r\nMSD-seL4 capdl: client checked reply\r\nMSD-seL4 capdl: client faulted at 0x3f201000\r\n

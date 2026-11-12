@@ -14,7 +14,8 @@ reason = "printing 無効の構成で、PL011 の polling だけを行う"
 [[objects]]
 name = "serial_ep"
 type = "endpoint"
-reason = "client から serial への一方向送信"
+allow_grant = true
+reason = "request/reply と、別 badge の fault 通知。grantreply だけを許す"
 
 [[pds]]
 name = "serial"
@@ -47,6 +48,7 @@ elf = "client.elf"
 stack = { vaddr = 0x70000000, size = 8192 }
 ipc_buffer = 0x70002000
 priority = 90
+fault_endpoint = "fault"
 reason = "短いメッセージを serial に送る。device と受信権限は持たない"
 
 [[pds.grants]]
@@ -54,6 +56,15 @@ name = "send"
 slot = 1
 object = "serial_ep"
 type = "endpoint"
-rights = ["write"]
+rights = ["write", "grantreply"]
 badge = 1
-reason = "badge 1 で識別される送信。capability の転送は許さない"
+reason = "badge 1 の Call と reply cap の作成。任意の capability は転送しない"
+
+[[pds.grants]]
+name = "fault"
+slot = 2
+object = "serial_ep"
+type = "endpoint"
+rights = ["write", "grantreply"]
+badge = 2
+reason = "kernel の fault IPC を badge 2 で serial に届ける。受信権限は持たない"

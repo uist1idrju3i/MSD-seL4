@@ -1,0 +1,7 @@
+run_id,phase,runner_status,qemu_status,result,diagnostic,build_log_sha256
+pilot-1,component-link,1,,failed,"multiple definition of _start; undefined reference to main",9f5e20985ce400ee5f2a81c5054e49ed87808bc0663f4385aa9a08e204998e92
+pilot-2,initializer-path,1,,failed,"sel4-capdl-initializer: No such file; actual suffix is .elf",1ecdf0dc2410c1d56edcb1223768a99f3c3f5d2cc4308cf37c7b18dca850bcc7
+pilot-3,add-spec,101,,failed,"patch_symbol unwrap: full strip removed symbol table",6ba66b6888f6553b8406bd53b0aef915aeb364586df0f5a11d723d92df91a48d
+pilot-4,positive-boot,0,124,passed,"request and reply markers",d93b32fbb4fb41e2edeeb1ce5669065d2aa1546a437a7efa63d2e84c0b838bd1
+pilot-negative,negative-boot,0,124,passed,"request and reply and VM fault markers",91f2a33d0536e9ae8355b3c0e2fe316acbc96a225c52a7cb8ca9ea0ab8d958ad
+silent-control,negative-control,1,124,expected-rejection,"empty PL011 transcript; runner FAILED",

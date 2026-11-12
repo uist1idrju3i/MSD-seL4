@@ -115,6 +115,12 @@ jobs:
           docker/msd-sel4-dev bash -c 'arm-linux-gnueabi-gcc --version | head -1; cmake --version | head -1; ninja --version; qemu-system-arm --version | head -1; rustc --version' \
             | tee "$RUNNER_TEMP/tool-versions.txt"
 
+      - name: Boot capDL request and isolated client fault (QEMU only)
+        run: |
+          set -euo pipefail
+          docker/msd-sel4-dev tools/qemu-capdl.sh build/capdl-positive positive ci-positive
+          docker/msd-sel4-dev tools/qemu-capdl.sh build/capdl-negative negative ci-negative
+
       - name: Restore Trivy database
         id: trivy-date
         run: printf 'date=%s\n' "$(date -u +%Y%m%d)" >> "$GITHUB_OUTPUT"
@@ -148,6 +154,10 @@ jobs:
             build/smoke/pl011.log
             ${{ runner.temp }}/qemu-smoke.log
             build/rust-smoke/pl011.log
+            build/capdl-positive/runs/
+            build/capdl-negative/runs/
+            build/capdl-positive/binaries.sha256
+            build/capdl-negative/binaries.sha256
             ${{ runner.temp }}/qemu-rust-smoke.log
             ${{ runner.temp }}/kernel-verified.log
             ${{ runner.temp }}/tool-versions.txt
