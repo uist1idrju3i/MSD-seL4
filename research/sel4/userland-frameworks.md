@@ -2,6 +2,14 @@
 
 [索引へ戻る](../README.md)
 
+## 現在の決定（2026-11-12、利用者の判断）
+
+root task を rust-sel4 `c819c27b` の `sel4-capdl-initializer` に変更します。system description は TOML とし、小さな generator から capDL を作る方針です。generator は次の PR で実装します。`parse-capDL` は schema が合う coliasgroup/capdl `26b8d39` を、専用の Docker build stage で作ります。[capDL の採用と設定](capdl.md)に互換性、toolchain、証明範囲を記録しています。
+
+理由は、検証済み kernel の TLS 設定を変えずに Rust initializer が QEMU で部品を起動できたことと、musl の TLS patch を維持せずに済むことです。C `capdl-loader-app` の Isabelle による初期化のモデルレベルの証明は、この Rust initializer には適用されません。generator と initializer は証明の対象外です。kernel の構成と証明の範囲は変えません。QEMU の結果は実機の確認ではありません。
+
+以下は 2026-11-11 時点の比較と旧案 B の決定の記録です。旧案の利点と推奨を、現在の採用決定とは区別して残します。
+
 D1 で AArch32 の検証済み構成を選んだため、userland の基盤は AArch32 と `bcm2837` に対応する必要があります。採否は、driver の計画の前に「component-options」スキルで決めます。
 
 | 基盤 | AArch32・rpi3 | 検証された部分 | 根拠（2026-11-11 取得） |

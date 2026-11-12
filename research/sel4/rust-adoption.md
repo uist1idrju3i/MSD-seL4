@@ -4,7 +4,13 @@
 
 rust-sel4 を使って Rust で部品を書く場合の利点、危険、形式検証、toolchain、ライセンスを検討し、段階的な採用の案をまとめます。
 
-## 現在の決定との関係
+## 現在の決定（2026-11-12）
+
+利用者の判断により、root task は rust-sel4 `c819c27b` の `sel4-capdl-initializer` に変更します。検証済み kernel の `tpidru`・`threadID_register` を変えず、QEMU で部品の起動に成功したためです。C loader の初期化のモデルレベルの Isabelle 証明は使えなくなります。Rust の型や rkyv の検査は、その証明の代わりにはなりません。[capDL の採用と設定](capdl.md)に toolchain と pipeline を記録します。
+
+以下の旧案 B と R1 からの推奨は、2026-11-11 の検討の履歴です。現在は R5 に相当する案を採ります。TOML の system description と generator は次の PR の範囲で、この PR では依存と決定だけを追加します。
+
+## 旧決定との関係（2026-11-11 の履歴）
 
 - userland の基盤は案 B（C の `capdl-loader-app` を root task にし、system の記述は capDL を自作の小さな generator で作る）に決まっています（[userland-frameworks.md](userland-frameworks.md)）。この文書は B を変えません。Rust は B の上で動く部品の言語として検討します。
 - `sel4-capdl-initializer` に置き換えると、初期化の model のレベルの証明を失います。置き換えは、別の判断を利用者から得るまで行いません。

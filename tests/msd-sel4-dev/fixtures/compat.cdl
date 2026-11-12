@@ -1,0 +1,18 @@
+/* SPDX-License-Identifier: BSD-3-Clause */
+arch arm11
+objects {
+  uart = frame (4k, paddr: 0x3f201000)
+  pd = pd
+  pt = pt
+  code = frame (4k, fill: [{0 4 CDL_FrameFill_FileData "component.elf" 0x1000}])
+  ipc = frame (4k)
+  cn = cnode (4 bits)
+  ep = ep
+  thread = tcb (addr: 0x20000, ip: 0x10000, sp: 0x21000, prio: 100, max_prio: 100, affinity: 0, fpu_disabled: True, init: [], fault_ep: 0)
+}
+caps {
+  cn { 1: ep (RW) 2: uart (RW, execute_never) }
+  pd { 0: pt }
+  pt { 16: code (R, executable) 32: ipc (RW, execute_never) }
+  thread { cspace: cn (guard: 0, guard_size: 28) vspace: pd ipc_buffer_slot: ipc (RW, execute_never) }
+}

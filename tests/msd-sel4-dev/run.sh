@@ -19,10 +19,18 @@ for uid in 1000 1001 4242; do
 		rustup +nightly-2026-08-21 component list --installed | grep -q "^rust-src"
 		test -n "$(find /usr/lib -name "libclang*.so*" -print -quit)"
 		arm-linux-gnueabi-gcc --version >/dev/null
+		test ! -d /opt/ghc
+		if command -v ghc || command -v stack; then
+			exit 1
+		fi
+		file /usr/local/bin/parse-capDL | grep -q ", stripped"
+		find /usr/share/doc/parse-capDL -type f -exec cat {} + >/dev/null
 		touch "$HOME/.write-test"
 		cargo_home="$(mktemp -d)"
 		CARGO_HOME="$cargo_home" cargo --version >/dev/null
 	'
 	printf 'ok - tools and HOME work as UID %s\n' "$uid"
 done
+docker run --rm --volume "$repo_root:/work:ro" "$image" \
+    python3 /work/tests/msd-sel4-dev/check-capdl.py
 printf 'All msd-sel4-dev tests passed.\n'

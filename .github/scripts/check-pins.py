@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import argparse
 import configparser
+import hashlib
 import json
 import os
 import re
@@ -23,6 +24,16 @@ RUST_SMOKE_TOOLCHAIN = "projects/rust-smoke/rust-toolchain.toml"
 DOCKERFILE = "docker/msd-sel4-dev.Dockerfile"
 DEPENDENCIES = "research/vendor/dependencies.md"
 SNAPSHOT_MAX_AGE_DAYS = 30
+CAPDL_PINS = {
+    "CAPDL_REV": r"[0-9a-f]{40}",
+    "CAPDL_SHA256": r"[0-9a-f]{64}",
+    "GHC_VERSION": r"\d+\.\d+\.\d+",
+    "GHC_SHA256": r"[0-9a-f]{64}",
+    "STACK_VERSION": r"\d+\.\d+\.\d+",
+    "STACK_SHA256": r"[0-9a-f]{64}",
+    "STACK_SNAPSHOT": r"lts-\d+\.\d+",
+    "STACK_SNAPSHOT_SHA256": r"[0-9a-f]{64}",
+}
 # Submodules whose commit is defined by the seL4 release manifest.
 MANIFEST_PROJECTS = {
     "vendor/seL4": "seL4.git",
@@ -81,7 +92,7 @@ def dockerfile_value(text: str, name: str) -> str:
 
 
 def dockerfile_base(text: str) -> tuple[str, str]:
-    match = re.search(r"^FROM ([\w./-]+:[\w.-]+)@(sha256:[0-9a-f]{64})\s*$", text, re.M)
+    match = re.search(r"^FROM ([\w./-]+:[\w.-]+)@(sha256:[0-9a-f]{64})(?: AS [\w-]+)?\s*$", text, re.M)
     return (match.group(1), match.group(2)) if match else ("", "")
 
 
@@ -119,6 +130,11 @@ def consistency(root: Path) -> list[str]:
     base, _digest = dockerfile_base(dockerfile)
     if not base:
         errors.append(f"{DOCKERFILE}: FROM must pin a tag and a full sha256 digest")
+    images = re.findall(r"^FROM (\S+)", dockerfile, re.M)
+    if any(not re.fullmatch(r"[\w./-]+:[\w.-]+@sha256:[0-9a-f]{64}", image) for image in images):
+        errors.append(f"{DOCKERFILE}: every FROM must pin a tag and a full sha256 digest")
+    if len(set(images)) > 1:
+        errors.append(f"{DOCKERFILE}: build and runtime stages must use the same base image")
     if not re.fullmatch(r"\d{8}T\d{6}Z", dockerfile_value(dockerfile, "DEBIAN_SNAPSHOT")):
         errors.append(f"{DOCKERFILE}: DEBIAN_SNAPSHOT must look like 20260101T000000Z")
     nightly = dockerfile_value(dockerfile, "RUST_SEL4_NIGHTLY")
@@ -133,6 +149,15 @@ def consistency(root: Path) -> list[str]:
     modules = submodules(root)
     links = gitlinks(root)
     dependencies = (root / DEPENDENCIES).read_text()
+    for name, pattern in CAPDL_PINS.items():
+        values = re.findall(rf"^ARG {name}=(\S+)$", dockerfile, re.M)
+        if len(values) != 1 or not re.fullmatch(pattern, values[0]):
+            errors.append(f"{DOCKERFILE}: {name} must have one immutable pin")
+        elif values[0] not in dependencies:
+            errors.append(f"{DEPENDENCIES}: record {name}={values[0]}")
+    snapshots = set(re.findall(r"^ARG DEBIAN_SNAPSHOT=(\S+)$", dockerfile, re.M))
+    if len(snapshots) != 1:
+        errors.append(f"{DOCKERFILE}: stages must use the same DEBIAN_SNAPSHOT")
     for path, values in sorted(modules.items()):
         if values.get("shallow") != "true":
             errors.append(f".gitmodules: {path} must set shallow = true")
@@ -245,6 +270,38 @@ def manifest(root: Path) -> list[str]:
                 f"{path} is {links.get(path, 'missing')[:12]}, but "
                 f"sel4test-manifest {tag} pins {project} at {expected[:12] or 'nothing'}"
             )
+    return errors + capdl_manifest(root)
+
+
+def capdl_manifest(root: Path) -> list[str]:
+    """Check the fork revision, its resolver, and the resolver's GHC without building."""
+    cargo = (root / "projects/rust-smoke/Cargo.toml").read_text()
+    revision = re.search(r'rust-sel4".*rev = "([0-9a-f]{40})"', cargo).group(1)
+    sources = fetch(
+        f"https://raw.githubusercontent.com/seL4/rust-sel4/{revision}/hacking/nix/scope/sources.nix",
+        accept="text/plain",
+    )
+    expected = re.search(r'capdlCommon = rec \{.*?rev = "([0-9a-f]{40})"', sources, re.S).group(1)
+    dockerfile = (root / DOCKERFILE).read_text()
+    errors = []
+    if dockerfile_value(dockerfile, "CAPDL_REV") != expected:
+        errors.append(f"CAPDL_REV must match rust-sel4 {revision}: {expected}")
+    stack = fetch(
+        f"https://raw.githubusercontent.com/coliasgroup/capdl/{expected}/capDL-tool/stack.yaml",
+        accept="text/plain",
+    )
+    resolver = re.search(r"^resolver: (lts-\d+\.\d+)$", stack, re.M).group(1)
+    if dockerfile_value(dockerfile, "STACK_SNAPSHOT") != resolver:
+        errors.append(f"STACK_SNAPSHOT must match capDL's declared resolver {resolver}")
+    snapshot = fetch(
+        "https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/"
+        + resolver.removeprefix("lts-").replace(".", "/") + ".yaml", accept="text/plain",
+    )
+    if hashlib.sha256(snapshot.encode()).hexdigest() != dockerfile_value(dockerfile, "STACK_SNAPSHOT_SHA256"):
+        errors.append("STACK_SNAPSHOT_SHA256 does not match the declared snapshot")
+    compiler = re.search(r"^\s*compiler: ghc-(\d+\.\d+\.\d+)$", snapshot, re.M).group(1)
+    if dockerfile_value(dockerfile, "GHC_VERSION") != compiler:
+        errors.append(f"GHC_VERSION must match {resolver}: {compiler}")
     return errors
 
 
@@ -354,6 +411,22 @@ def upstream_rows(root: Path, today: date) -> list[tuple[str, str, str, str, str
     add("rust-sel4", rust_sel4_version(root),
         lambda: latest_release("seL4/rust-sel4"),
         note="nightly は release の rust-toolchain.toml に合わせる")
+    add("capDL (coliasgroup/rust)", dockerfile_value(dockerfile, "CAPDL_REV"),
+        lambda: parse_heads(ls_remote("https://github.com/coliasgroup/capdl.git", "refs/heads/rust"))["rust"],
+        lambda current, latest: "最新" if current == latest else "更新あり",
+        "rust-sel4 の指定 revision と JSON schema を合わせる。自動更新しない")
+    add("Stack", dockerfile_value(dockerfile, "STACK_VERSION"),
+        lambda: latest_release("commercialhaskell/stack"))
+    def latest_ghc() -> str:
+        tags = ls_remote("https://github.com/ghc/ghc.git", "refs/tags/ghc-*-release")
+        versions = re.findall(r"refs/tags/ghc-(\d+\.\d+\.\d+)-release", tags)
+        return max(versions, key=version_key)
+    add("GHC", dockerfile_value(dockerfile, "GHC_VERSION"), latest_ghc,
+        note="capDL の resolver と一緒に確認し、単独では上げない")
+    add("Stackage snapshot", dockerfile_value(dockerfile, "STACK_SNAPSHOT"),
+        lambda: json.loads(fetch("https://www.stackage.org/download/snapshots.json", accept="application/json"))["lts"],
+        lambda current, latest: "最新" if current == latest else "更新あり",
+        "更新時は capDL の resolver、GHC、snapshot SHA-256 を一緒に照合する")
     add("Trivy", workflow_env(root, "TRIVY_VERSION"),
         lambda: latest_release("aquasecurity/trivy"))
     add("actionlint", image_tag_version(root, "rhysd/actionlint"),
