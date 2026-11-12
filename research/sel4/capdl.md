@@ -112,6 +112,14 @@ bare initializer → strip → spec 付き initializer → elfloader / boot imag
 
 Haskell tool は host image の専用 stage で build します。最終 image には strip 済み binary と必要な library・通知だけを渡します。対象は既存 CI と同じ amd64 host です。Arm の kernel を作ることと、開発 image の host architecture は別です。arm64 host はこの bindist の対象外として早く失敗させます。
 
+## TOML schema と独立 checker（PR 2）
+
+`tools/capdl/generate.py` は一つの TOML から PD の ELF・stack・IPC buffer と明示的な型付き grant を読み、AArch32 の `.cdl` と capability 表を生成します。PT_LOAD ごとの file-backed frame fill を使い、BSS はゼロにします。標準ライブラリだけで動きます。
+
+`tools/capdl/check.py` は生成器を呼ばずに parse-capDL の JSON の TCB→CSpace をたどり、宣言と slot・対象・型・rights・badge が完全一致するかを検査します。VSpace と device の物理アドレス、frame fill も照合します。未知の key、untyped/CNode/TCB grant、無許可の grant 権、kernel device との重なり、DMA marker の不足を拒否します。schema と ELF reader は共有するため、検査器同士の一致を形式証明とは扱いません。
+
+[schema と checker の仕様](capdl-generator.md)に全 key・CLI・拒否条件を、[生成した表](serial-client-capabilities.md)に PR 3 用 serial/client の権限を記録します。component ELF の実装と新しい起動経路は後続 PR です。
+
 ## 証明の範囲
 
 seL4 17.0.0 の `ARM_bcm2837_verified` を変更しません。kernel の証明の範囲と前提は [検証済み構成](verified-configuration.md)、既存の boot patch は [差分](verified-config-deviations.md)に従います。**C capdl-loader-app の初期化のモデルレベルの Isabelle 証明は、Rust initializer に適用されません。** generator、JSON translator、add-spec、rkyv archive、initializer、driver、アプリケーションの正当性を証明したとは主張しません。QEMU の成功は実機・firmware・peripheral の確認ではありません。
