@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# Keep the no-grant baseline independent of the boot demonstration's protocol.
+version = 1
+kernel_printing = false
+
+[[objects]]
+name = "uart"
+type = "device"
+paddr = 0x3f201000
+size = 4096
+dma_capable = false
+reason = "polling PL011"
+
+[[objects]]
+name = "serial_ep"
+type = "endpoint"
+reason = "one-way IPC"
+
+[[pds]]
+name = "serial"
+elf = "serial.elf"
+stack = { vaddr = 0x70000000, size = 8192 }
+ipc_buffer = 0x70002000
+priority = 100
+reason = "serial fixture"
+
+[[pds.grants]]
+name = "uart"
+slot = 1
+object = "uart"
+type = "device"
+rights = ["read", "write"]
+vaddr = 0x40000000
+reason = "PL011 registers"
+
+[[pds.grants]]
+name = "receive"
+slot = 2
+object = "serial_ep"
+type = "endpoint"
+rights = ["read"]
+reason = "receive requests"
+
+[[pds]]
+name = "client"
+elf = "client.elf"
+stack = { vaddr = 0x70000000, size = 8192 }
+ipc_buffer = 0x70002000
+priority = 90
+reason = "client fixture"
+
+[[pds.grants]]
+name = "send"
+slot = 1
+object = "serial_ep"
+type = "endpoint"
+rights = ["write"]
+badge = 1
+reason = "badged send only"

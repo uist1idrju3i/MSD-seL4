@@ -6,6 +6,8 @@ driver はすべて seL4 のユーザー空間に自作します。driver ごと
 
 DMA と PIO の選び方、IOMMU がないことの影響、QEMU で確かめられる範囲は [dma-iommu.md](dma-iommu.md) にまとめています。
 
+静的な二つの PD を起動する [CapDL の基盤](../sel4/capdl.md)が QEMU で動きました。PL011 を持つ serial と、device を持たない client の IPC・reply・VM fault を確認しています。これは polling UART の試験用 component で、実機用 driver の完成ではありません。次は driver ごとの計画確認と実装です。以下の実機用 driver の状態は変えません。
+
 | driver | 依存する driver | 調査 | 状態 |
 |---|---|---|---|
 | GPIO | - | [soc-blocks.md](soc-blocks.md) | 調査済み |

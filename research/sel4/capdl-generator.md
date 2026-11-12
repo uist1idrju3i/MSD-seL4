@@ -7,7 +7,7 @@
 
 PR 2 の host tool は、単一 thread の PD を静的に作る AArch32・non-MCS 用の generator です。Python 3.11 以降の標準ライブラリだけを使い、`tomllib` で一つの TOML を読みます。kernel・root initializer・実際の component の build と boot はこの tool の仕事ではありません。実機と新しい二つの PD の起動は未確認です。
 
-[system.toml](../../projects/capdl/system.toml) は PR 3 用の宣言です。component ELF はまだ実装していません。[capability 表](serial-client-capabilities.md)はこの宣言から生成してコミットします。`.cdl` は ELF の segment に依存するため build 時の出力とし、コミットしません。
+[system.toml](../../projects/capdl/system.toml) は serial/client の宣言です。PR 3 で C component と [QEMU の起動経路](capdl.md#二つの-c-component-を起動するpr-3)を追加しました。[capability 表](serial-client-capabilities.md)はこの宣言から生成してコミットします。`.cdl` は ELF の segment に依存するため build 時の出力とし、コミットしません。
 
 | 方式 | 採否 | 理由 |
 |---|---|---|
@@ -19,12 +19,16 @@ PR 2 の host tool は、単一 thread の PD を静的に作る AArch32・non-M
 
 | PD | 役割・扱うデータ | 優先度・予算 | 信頼・障害時の影響 |
 |---|---|---|---|
-| serial | badged endpoint から短い IPC を受け、長さを確認し、PL011 を polling する予定 | 100。non-MCS のため予算設定はない | UART の所有者。誤動作で出力が壊れる。busy loop で低優先度の client を止めるおそれがある |
+| serial | badged endpoint から短い IPC を受け、長さを確認し、PL011 を polling する | 100。non-MCS のため予算設定はない | UART の所有者。誤動作で出力が壊れる。busy loop で低優先度の client を止めるおそれがある |
 | client | 短いメッセージの送信。device の cap は持たない | 90。予算設定なし | serial への送信で停止・待機しうる。直接 UART や他 PD のメモリへ書けない |
 
 初期化後の CSpace には宣言した grant だけを入れます。CNode・TCB・untyped・IRQ cap、自身の VSpace cap も配りません。stack・ELF・IPC buffer は VSpace に mapping し、TCB の内部 slot だけに CSpace・VSpace・IPC buffer の cap を置きます。権限を実行時に増やす allocator や capability 転送は、この system にありません。
 
-現在は fault endpoint を指定せず、監視や再起動も実装しません。fault で止まった部品の復帰は system 全体の再起動が必要です。serial の停止で client が送信待ちになる可能性があります。実際の長さ検査、UART polling の上限、停止時の挙動は PR 3 以降で試験します。この表を、まだ存在しない component の実装の保証とは扱いません。
+PR 3 では同じ endpoint の badge 1 で Call、badge 2 で client の fault を届けます。client の二つの cap は write/grantreply、serial は read です。grant は配りません。allow_grant は schema の gate で、実際の rights は各 grant が決めます。reply cap は kernel が往復のために作る一時的な権限です。任意の cap を転送したり、object を増やしたりする権限はありません。
+
+fault 用も write だけにはできません。non-MCS の [sendFaultIPC](https://github.com/seL4/seL4/blob/62e345c240a15671484530b4e6e069ce266c28d7/src/kernel/faulthandler.c#L83-L86) は send と grant/grantreply のいずれかを要求します。任意の cap を渡せる grant は避け、grantreply に限ります。kernel は client の CSpace から fault slot を lookup するため、その cap も client に置く必要があります。
+
+serial は長さ・badge・protocol の順序を検査し、polling の反復にも上限を設けます。client の VM fault に reply せず、停止したまま残します。監視や再起動は実装せず、復帰には system 全体の再起動が必要です。serial が止まると client は Call 待ちで止まりえます。fault 用 badge は悪意ある client に対する kernel の認証ではありません。client 自身もその cap で送信できるため、この試験の結論は固定した C binary に限ります。
 
 ## schema version 1
 
