@@ -25,7 +25,7 @@ CardputerZero の各 device の driver が使う、SoC 側の部品の調査で�
 | clock manager（cprman） | `0x3F101000` | なし | PCM、PWM、GP clock |
 | 乱数（RNG） | `0x3F104000` | `<2 29>` | 乱数の部品 |
 | GPIO | `0x3F200000` | `<2 17>`〜`<2 20>` | 全 device の pin |
-| PL011 UART | `0x3F201000` | `<2 25>` | Bluetooth（推測）または console |
+| PL011 UART | `0x3F201000` | `<2 25>` | CM0 の既定は Bluetooth 用。外部 console への変更は [判断待ち](uart-pl011.md) |
 | SDHOST | `0x3F202000` | `<2 24>` | microSD（[storage-sd.md](storage-sd.md)） |
 | PCM・I2S | `0x3F203000` | `rpi3.dts` に記載なし | 音声（[audio-es8389.md](audio-es8389.md)） |
 | SPI0 | `0x3F204000` | `<2 22>` | LCD、HAT の SPI |
@@ -60,13 +60,15 @@ seL4 では 1 つの IRQ の capability を 1 つの部品が受け取ります�
 - BSC0、BSC1、BSC2 は同じ `<2 21>` です。I2C の driver を bus ごとに分ける場合でも、割り込みを受ける部品は 1 つです。案は、3 つの BSC を 1 つの I2C の部品にまとめるか、割り込みを使わない bus（HDMI の DDC）は timer で polling することです。
 - mini UART、SPI1、SPI2 は同じ AUX の `<1 29>` で、register も同じ page です。この 3 つは 1 つの部品にまとめます。
 - DMA の channel 11〜14 は `<1 27>` を共有します。DMA server がまとめて持つので問題になりません。
-- GPIO の割り込みは bank ごとに 4 本（`<2 17>`〜`<2 20>`）です。CardputerZero で割り込みに使う pin（GPIO6、GPIO13、GPIO17、GPIO27）は、すべて bank 0（GPIO0〜27）にあり、同じ `<2 17>` に来ます。【推測。bank の割り当ては BCM2835 ARM Peripherals の GPIO の章による】GPIO の割り込みは GPIO の部品が受け、通知で各 driver に配ります。
+- GPIO は `<2 17>`〜`<2 20>` の 4 本です。以前は「bank 0=GPIO0〜27」と推測しましたが、register bank は0〜31と32〜53、IRQ group は0〜27、28〜45、46〜53と全体の集約で、別の区分です。固定 Linux の handler と rpi3.dts による訂正は [GPIO 調査](gpio.md) にあります。GPIO6、13、17、27 は register bank 0・IRQ `<2 17>` です。GPIO PD が受け、通知で各 driver に配る案です。
 
 ## GPIO
 
+register の全表、pull の手順、CardputerZero の pin 許可表案、firmware と Linux の違い、IRQ、QEMU の限界は [GPIO の個別調査](gpio.md) にまとめました。以下は初期調査の要約です。
+
 - 54 本の pin の機能（`GPFSEL`）、出力（`GPSET`、`GPCLR`）、入力（`GPLEV`）、edge・level の検出（`GPEDS` など）、pull（BCM2837 は `GPPUD` と `GPPUDCLK` の手順）が 1 つの page にあります。
 - page を分けられないので、GPIO の部品を 1 つ置き、各 driver には「この pin だけ」を操作する IPC の interface を渡します。pin と操作の許可表は、capDL の generator が作る静的な表にします。
-- CardputerZero の割り当て（v5 overlay と回路図による）: LCD は GPIO8（CS0）・10・11・25（DC）・5（TE）、HAT の SPI は GPIO7（CS1）・9・22（GPIO の CS）、I2C1 は GPIO2・3、音声は GPIO18〜21・17（ヘッドホンの検出）・24（アンプ）、キーボードの割り込みは GPIO27、電源異常は GPIO6、IR は GPIO12（送信）・13（受信）、Grove の切り替えは GPIO4、UART は GPIO14・15、HAT の P0・P1 は GPIO26・23。
+- CardputerZero の割り当て（v5 overlay と回路図による）: LCD は GPIO8（CS0）・10・11・25（DC）・5（TE）、HAT の SPI は GPIO7（CS1）・9・22（GPIO の CS）、I2C1 は GPIO2・3、音声は GPIO18〜21・17（ヘッドホンの検出）・24（アンプ）、キーボードの割り込みは GPIO27、電源異常は GPIO6、IR は GPIO12（送信）・13（受信）、Grove の切り替えは GPIO4、外部 UART の配線は GPIO14・15、HAT の P0・P1 は GPIO26・23。GPIO16 は M5IOE1 reset で、camera の電源 pin とはしません。
 - 電源断に関わる pin（GPIO6）の割り込みが遅れないよう、GPIO の部品は優先度を高くします。
 
 ## mailbox（firmware との通信）
@@ -78,7 +80,7 @@ seL4 では 1 つの IRQ の capability を 1 つの部品が受け取ります�
 
 ## UART
 
-- PL011（`0x3F201000`）は単独の page です。CM0 の無線付きの型番では、Raspberry Pi の firmware の既定で PL011 が Bluetooth に、mini UART が GPIO14・15 に割り当てられます。【推測。`config.txt` の `dtoverlay` の組み合わせで変わり、v5 の config.txt では明示していない】
+- register、clock、CM0 の Bluetooth と外部 UART の選択、ring と通知の案は [PL011 の個別調査](uart-pl011.md) にまとめました。以前は Bluetooth の割り当てを推測としていましたが、固定 CM0 DTS の PL011 は30〜33の Bluetooth 用です。配布 config.txt と v5 の config_setup は別で、どちらにも PL011 を14/15へ移す指定はありません。実機の適用済み設定は未確認です。
 - mini UART は AUX の page と割り込みを SPI1・SPI2 と共有し、baud rate が VPU の clock に依存します。
 - smoke test では PL011 を使っています（[QEMU の smoke test](../experiments/2026-11-11-qemu-smoke.md)）。
 

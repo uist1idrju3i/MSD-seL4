@@ -6,6 +6,8 @@
 
 ### 追加
 
+- GPIO と PL011 UART の個別調査を追加しました。register、CardputerZero の pin、Bluetooth と外部 UART の選択、権限・通知・障害時の案、QEMU の再現範囲と実機の確認項目を整理しました。driver は未実装で、起動設定は変更していません。
+
 - Rust CapDL initializer から C の serial/client を起動する経路と QEMU runner を追加しました。TOML の権限・ELF を照合し、request/reply と client の未 mapping の PL011 read の VM fault を試験します。add-spec 前は debug 情報だけを strip し、埋め込み後は copy だけにします。正負各五回の結果と送信なしの対照を記録しました。kernel は同じ verified configuration と既存 boot patch だけです。実機と製品用 driver は未確認です。
 
 - TOML の静的 system 宣言から AArch32 capDL と capability 表を作る標準ライブラリだけの generator を追加しました。serial/client の宣言と生成表、parser JSON の CSpace・VSpace を照合する独立 checker、拒否・決定性・mutation の試験を加えました。component と boot の実装は後続 PR です。

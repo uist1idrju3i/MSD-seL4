@@ -30,8 +30,14 @@ driver の調査で、資料だけでは決まらず実機での確認が要る�
 | HW-13 | キーボードの無効なキー（Z・X・C・F）の刻印と matrix | [キーボード](../drivers/keyboard-tca8418.md) | 刻印を写真で記録し、TCA8418 の event を `i2cget` で読む | 46 キーの行・列を記録できたら完了 | - |
 | HW-14 | PCM の clock と MCLK の周波数 | [音声](../drivers/audio-es8389.md) | Linux で 48 kHz の再生中に、GPIO18（BCLK）、19（LRCK）、21 を測る | 周波数を記録できたら完了 | - |
 | HW-15 | IR の割り込みの遅れ | [IR](../drivers/ir.md) | seL4 の GPIO の driver ができた後に行う。信号発生器の pulse と、driver が記録した時刻を比べる | 遅れの分布を記録できたら完了 | - |
+| HW-16 | GPIO の boot 時の function・level と firmware の責務 | [GPIO](../drivers/gpio.md) | firmware の版、実際の config.txt、DT を保存。Linux 起動後と seL4 の GPIO 初期化前を別条件で記録し、GPIO0〜53 の GPFSEL/GPLEV と配線を照合。pull は読み戻せないので設定手順を記録。reset・電源 pin は変更しない | 各値を firmware の宣言、Linux の pinctrl、seL4 の設定と区別できること。GPIO16 を誤って camera 用に変更していないこと | - |
+| HW-17 | GPIO6 の即時通知、edge/level、pull、IRQ storm | [GPIO](../drivers/gpio.md)、[電源異常](../drivers/powerfail-gpio6.md) | driver 完成後、安全な信号入力で pin ごとの GPEDS と IRQ group を照合。起動時 LOW、連続 edge、GPIO27 の LOW 保持、他 pin の storm 中の GPIO6 を測る。実際の電源断は HW-1/HW-2 の安全確認後 | pull が計画値と合い、許可外 pin を操作せず、level を解除後に再 arm できること。GPIO6 の遅延を最小・中央値・最大で記録し、事前に決めた猶予以内であること。GPEDS/通知の合流を欠落ゼロとは扱わない | - |
+| HW-18 | PL011 の外部経路、BT、clock、baud | [PL011](../drivers/uart-pl011.md) | 無線の有無と BT の停止方針を確認してから14/15を設定。実際の config と UART clock query 又は静的値、divisor を保存。Grove/HAT を一つずつ loopback 接続し、logic analyzer で115200 8N1を測る | UART の pin、Grove mux、clock が計画と一致し、baud error の事前の許容値以内であること。BT や二つの外部 RX と競合しないこと | - |
+| HW-19 | UART FIFO 閾値・短い RX・overrun・停止 | [PL011](../drivers/uart-pl011.md) | driver 完成後、1 byte、閾値未満、連続入力を送り RX/RT IRQ を観測。ring full、受信処理遅延、client/driver 停止、TX drain を試す。GPIO6 の経路も同時に観測 | 短い入力が届くこと。overflow/error が counter と gap に現れ、無言で成功しないこと。BUSY 待ちと client 待ちが期限で終わり、UART 障害で電源通知が止まらないこと | - |
 
 HW-1〜HW-14 は Linux で行えます。HW-15 は seL4 の driver ができてからです。
+
+HW-16 の Linux の値は firmware 引き継ぎ値とは別です。HW-17〜HW-19 の driver 試験は seL4 の実装後に行い、合否に必要な時間・baud error の上限を測定前に決めます。開発 image と同版の upstream QEMU 10.0.13 には GPIO の edge/pull/IRQ がなく、PL011 も IFLS の閾値、受信 timeout、baud 波形を再現しません。MSD/Linux の patch 付き QEMU の試験で代用しません。全項目は未実施です。
 
 ## 実施の順序
 
