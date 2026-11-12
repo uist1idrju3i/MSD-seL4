@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# AArch32 fixture constants, not a replacement for generated kernel sizes.
+seL4_Slot: 4
+seL4_TCBObject: 9
+seL4_EndpointObject: 4
+seL4_PageDirectoryObject: 14
+seL4_PageTableObject: 10

@@ -28,6 +28,7 @@ MSD/seL4 の内部文書です。公開サイトは `docs/` にあります。�
 | [sel4/userland-frameworks.md](sel4/userland-frameworks.md) | userland の基盤（Microkit、CAmkES、capDL、rust-sel4、sDDF、LionsOS）の比較、版、初期化の証明の範囲、推奨 |
 | [sel4/rust.md](sel4/rust.md) | seL4 の Rust（rust-sel4）の crate、`ARM_bcm2837_verified` とそれ以外の構成への対応状況 |
 | [sel4/rust-adoption.md](sel4/rust-adoption.md) | Rust の採用の検討（unsafe の境界、形式検証、toolchain、ライセンス、段階的な採用の案） |
+| [sel4/capdl.md](sel4/capdl.md) | Rust initializer と capDL tool の採用、schema 互換性、全 option、pipeline、証明の対象外 |
 | [sel4/system-architecture.md](sel4/system-architecture.md) | 部品の分け方と、capability・IPC・IRQ・MMIO・DMA・fault の設計方針 |
 | [hardware/inventory.md](hardware/inventory.md) | CardputerZero の device と接続 |
 | [sel4/shared-intc-page.md](sel4/shared-intc-page.md) | 割り込み controller と mailbox が同じ page にあることと、kernel の証明の前提 |

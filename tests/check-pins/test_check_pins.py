@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from datetime import date
 from pathlib import Path
+from unittest.mock import patch
 
 SCRIPT = Path(__file__).resolve().parents[2] / ".github/scripts/check-pins.py"
 SPEC = importlib.util.spec_from_file_location("check_pins", SCRIPT)
@@ -30,6 +31,14 @@ WORKFLOW = f"""jobs:
 DOCKERFILE = f"""FROM debian:trixie-slim@{DIGEST}
 ARG DEBIAN_SNAPSHOT=20261103T023120Z
 ARG RUST_SEL4_NIGHTLY=nightly-2026-08-21
+ARG CAPDL_REV={SHA_B}
+ARG CAPDL_SHA256={'d' * 64}
+ARG GHC_VERSION=9.10.3
+ARG GHC_SHA256={'e' * 64}
+ARG STACK_VERSION=3.7.1
+ARG STACK_SHA256={'f' * 64}
+ARG STACK_SNAPSHOT=lts-24.32
+ARG STACK_SNAPSHOT_SHA256={'1' * 64}
 """
 
 
@@ -41,7 +50,7 @@ class FixtureRepo:
         self.write("docker/msd-sel4-dev.Dockerfile", DOCKERFILE)
         self.write(".gitmodules", '[submodule "vendor/x"]\n\tpath = vendor/x\n'
                    "\turl = https://example.com/x.git\n\tshallow = true\n")
-        self.write("research/vendor/dependencies.md", f"`vendor/x` {SHA_A}\n")
+        self.write("research/vendor/dependencies.md", f"`vendor/x` {SHA_A}\n" + DOCKERFILE)
         subprocess.run(["git", "-C", str(self.root), "update-index", "--add",
                         "--cacheinfo", f"160000,{SHA_A},vendor/x"], check=True)
 
@@ -110,6 +119,69 @@ class ConsistencyTest(unittest.TestCase):
         text = (self.repo.root / ".gitmodules").read_text()
         self.repo.write(".gitmodules", text.replace("shallow = true", "shallow = false"))
         self.assertTrue(any("shallow = true" in e for e in self.errors()))
+
+    def test_accepts_named_build_stage(self) -> None:
+        self.repo.write("docker/msd-sel4-dev.Dockerfile",
+                        DOCKERFILE.replace(f"@{DIGEST}", f"@{DIGEST} AS capdl-build"))
+        self.assertEqual(self.errors(), [])
+
+    def test_rejects_unpinned_runtime_stage(self) -> None:
+        self.repo.write("docker/msd-sel4-dev.Dockerfile", DOCKERFILE + "FROM debian:trixie-slim\n")
+        self.assertTrue(any("every FROM must pin" in e for e in self.errors()))
+
+    def test_rejects_different_stage_bases(self) -> None:
+        self.repo.write("docker/msd-sel4-dev.Dockerfile", DOCKERFILE +
+                        f"FROM debian:trixie-slim@sha256:{'d' * 64}\n")
+        self.assertTrue(any("same base image" in e for e in self.errors()))
+
+    def test_requires_all_capdl_pins(self) -> None:
+        for name in check_pins.CAPDL_PINS:
+            with self.subTest(name=name):
+                text = "\n".join(line for line in DOCKERFILE.splitlines()
+                                 if not line.startswith(f"ARG {name}="))
+                self.repo.write("docker/msd-sel4-dev.Dockerfile", text)
+                self.assertTrue(any(name in e for e in self.errors()))
+
+    def test_rejects_floating_or_malformed_capdl_pins(self) -> None:
+        for name in check_pins.CAPDL_PINS:
+            with self.subTest(name=name):
+                value = check_pins.dockerfile_value(DOCKERFILE, name)
+                self.repo.write("docker/msd-sel4-dev.Dockerfile",
+                                DOCKERFILE.replace(f"ARG {name}={value}", f"ARG {name}=latest"))
+                self.assertTrue(any(name in e for e in self.errors()))
+
+    def test_rejects_duplicate_capdl_pin(self) -> None:
+        self.repo.write("docker/msd-sel4-dev.Dockerfile", DOCKERFILE + f"ARG CAPDL_REV={SHA_B}\n")
+        self.assertTrue(any("CAPDL_REV" in e for e in self.errors()))
+
+    def test_rejects_unrecorded_capdl_pins(self) -> None:
+        self.repo.write("research/vendor/dependencies.md", f"`vendor/x` {SHA_A}\n")
+        self.assertTrue(any("record CAPDL_REV" in e for e in self.errors()))
+
+    def test_rejects_different_stage_snapshots(self) -> None:
+        self.repo.write("docker/msd-sel4-dev.Dockerfile", DOCKERFILE + "ARG DEBIAN_SNAPSHOT=20260101T000000Z\n")
+        self.assertTrue(any("same DEBIAN_SNAPSHOT" in e for e in self.errors()))
+
+    def test_capdl_manifest(self) -> None:
+        snapshot = "resolver:\n  compiler: ghc-9.10.3\n"
+        checksum = check_pins.hashlib.sha256(snapshot.encode()).hexdigest()
+        self.repo.write("docker/msd-sel4-dev.Dockerfile", DOCKERFILE.replace("1" * 64, checksum))
+        self.repo.write("projects/rust-smoke/Cargo.toml",
+                        f'sel4 = {{ git = "https://github.com/seL4/rust-sel4", rev = "{SHA_A}" }}')
+        responses = [f'capdlCommon = rec {{ rev = "{SHA_B}";', "resolver: lts-24.32\n", snapshot]
+        with patch.object(check_pins, "fetch", side_effect=responses):
+            self.assertEqual(check_pins.capdl_manifest(self.repo.root), [])
+
+    def test_capdl_manifest_rejects_drift(self) -> None:
+        self.repo.write("projects/rust-smoke/Cargo.toml",
+                        f'sel4 = {{ git = "https://github.com/seL4/rust-sel4", rev = "{SHA_A}" }}')
+        with patch.object(check_pins, "fetch", side_effect=[
+            f'capdlCommon = rec {{ rev = "{SHA_A}";', "resolver: lts-20.25\n",
+            "resolver:\n  compiler: ghc-9.2.8\n",
+        ]):
+            errors = check_pins.capdl_manifest(self.repo.root)
+        for name in ("CAPDL_REV", "STACK_SNAPSHOT", "STACK_SNAPSHOT_SHA256", "GHC_VERSION"):
+            self.assertTrue(any(name in e for e in errors), errors)
 
     def test_rejects_unrecorded_gitlink(self) -> None:
         self.repo.write("research/vendor/dependencies.md", "`vendor/x` aaaaaaaa\n")

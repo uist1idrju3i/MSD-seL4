@@ -6,6 +6,9 @@
 
 ### 追加
 
+- capDL の JSON tool（coliasgroup/capdl `26b8d39`）を専用 Docker stage で build し、strip 済み `parse-capDL` を開発用 image に追加しました。GHC 9.10.3、Stack 3.7.1、lts-24.32 と配布物の SHA-256 を固定し、schema fixture と pin 検査を加えました。
+- root initializer を Rust の `sel4-capdl-initializer` に変更する 2026-11-12 の決定を記録しました。旧案 B は履歴として残し、C loader の初期化モデルの Isabelle 証明が使えなくなること、generator と initializer が証明の対象外であることを明記しました。製品の起動経路と generator の実装は後続 PR です。
+
 - seL4 の SMP とマルチカーネルの調査を `research/sel4/multicore.md` に加え、将来計画を `research/roadmap.md` として新設して「マルチカーネル対応」を記録しました。`research/sel4/verified-platforms.md` にも、アーキテクチャごとの SMP とマルチカーネルの対応状況を追記しました。SMP は bcm2837 に upstream の IPI 実装がなく採用せず、マルチカーネルはコア間シグナル・IRQ の分割・複数 kernel image の起動に未整備の部分があり、kernel patch が要る可能性があることなどを書きました。実機と QEMU では何も試していません。
 
 - CI の構成と動かす条件の判断、ruleset との関係、開発用 image の中身の判断を `research/ci.md` に記録しました。

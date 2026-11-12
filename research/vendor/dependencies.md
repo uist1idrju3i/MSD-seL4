@@ -12,6 +12,32 @@
 | `vendor/yomiyasu` | https://github.com/nanaism/yomiyasu | tag `v2.5.0`（commit `29d67ccb05e370b5958d72920a9cd1aa829dee80`） | MIT | 日本語文書の推敲スキル |
 | `vendor/m5stack-linux-dtoverlays` | https://github.com/m5stack/m5stack-linux-dtoverlays | `main` の `4f7aeee9fc103ebb03d22cac476bb191ecfb321e`（2026-11-05） | GPL-2.0 WITH Linux-syscall-note（`COPYING`） | CardputerZero の配線と初期化の手順を読む資料。コードは写さない |
 
+## capDL の build 用配布物（2026-11-12）
+
+root initializer は rust-sel4 `c819c27b076130cba9821c4555f23773e4b0bffd` の `sel4-capdl-initializer` に決めました。[判断と option](../sel4/capdl.md)を参照してください。以下は Dockerfile の ARG と対応します。取得した各ファイルは SHA-256 を照合してから使います。
+
+| ARG | 固定値 | 役割・ライセンス |
+|---|---|---|
+| CAPDL_REV | `26b8d39c17e99e5423763e9ed292a1d123c39f56` | coliasgroup/capdl の rust branch。Haskell tool は BSD-2-Clause。repository 全体には GPL-2.0-only なども含むが C loader は build しない |
+| CAPDL_SHA256 | `0d96b8fe4b0175d3739cf2f2314d717f915da6b4e6f220be9f763a3103356c86` | capDL source tarball |
+| GHC_VERSION | `9.10.3` | build stage 専用。GHC は BSD-3-Clause を中心とする複数ライセンス |
+| GHC_SHA256 | `1ac63f04eac0ad551d45cbde38f27e0e3f43ceefd98833fae1fa3f2dbd042367` | x86_64 Debian 12 bindist |
+| STACK_VERSION | `3.7.1` | build stage 専用。BSD-3-Clause |
+| STACK_SHA256 | `b6df9168d471d917d955ee80553562ca2b0b3b1aa61cd1256199406c2d8c4eb4` | Linux x86_64 binary tarball |
+| STACK_SNAPSHOT | `lts-24.32` | capDL 自身の stack.yaml と同じ resolver |
+| STACK_SNAPSHOT_SHA256 | `35f75b07f0b69b3c3e69fe8f034f3be26b3236826b569b7bfdfb9c8aaf651552` | snapshot YAML。依存 package の Hackage revision と hash はこの内容に従う |
+
+固定 URL:
+
+- https://codeload.github.com/coliasgroup/capdl/tar.gz/26b8d39c17e99e5423763e9ed292a1d123c39f56
+- https://downloads.haskell.org/~ghc/9.10.3/ghc-9.10.3-x86_64-deb12-linux.tar.xz
+- https://github.com/commercialhaskell/stack/releases/download/v3.7.1/stack-3.7.1-linux-x86_64.tar.gz
+- https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/24/32.yaml
+
+GHC と Stack の SHA-256 は配布元の [GHC SHA256SUMS](https://downloads.haskell.org/~ghc/9.10.3/SHA256SUMS) と [Stack checksum](https://github.com/commercialhaskell/stack/releases/download/v3.7.1/stack-3.7.1-linux-x86_64.tar.gz.sha256)に照合します。tarball と snapshot は取得した内容の hash を固定します。既存と同じ Debian snapshot を使い、CA の初回導入だけは既存と同様に通常の apt mirror を使います。
+
+submodule にはしません。必要なのは build stage の source だけで、Dockerfile に URL・revision・hash があれば image の入力 tag に反映されます。最終 image へは strip 済み `parse-capDL`、ライセンス通知、必要な runtime library を入れ、GHC・Stack・source tree は入れません。`check-pins.py consistency` は全 ARG と本表の一致を、`manifest` は rust-sel4 の指定 revision、capDL の resolver、snapshot hash と GHC の一致を調べます。週次の `upstream` は fork の rust branch・GHC・Stack・snapshot を監視します。版を単独では上げず、JSON schema の試験を繰り返します。
+
 ## 加えなかった起動部品
 
 | 部品 | 判断 | 理由 |
@@ -19,7 +45,7 @@
 | U-Boot | 今は加えない | rpi3 の公式手順は U-Boot から elfloader を起動するが、既定の U-Boot は elfloader の cache の扱いと合わない（[起動経路](../sel4/boot-chain.md)）。GPU firmware の `kernel=` で elfloader を直接起動できれば不要になり、信頼する部品も減る。直接起動の実験で失敗したときに、版と cache の対処を決めて加える |
 | Raspberry Pi の GPU firmware（`bootcode.bin`、`start*.elf`、`fixup*.dat`） | submodule にしない | `raspberrypi/firmware` は履歴が数十 GB あり、shallow でも Linux kernel の image を含む。起動 image を作る段階で、release の tag と各ファイルの SHA-256 を固定して取得する。版は MSD/Linux の Buildroot が使う commit（`063bcab6`）を起点に比べる |
 | Raspberry Pi の Linux kernel（`raspberrypi/linux`） | submodule にしない | 大きく、GPL。BCM2837 の周辺回路の driver を読む資料として、commit を固定した URL で参照する |
-| seL4 の userland の残り（`seL4_libs`、capDL の tool と `capdl-loader-app` など） | 必要になった時点で加える | userland の基盤は B（[userland の基盤](../sel4/userland-frameworks.md)）に決まった。smoke test の root task は `sel4runtime` だけを link する。加えるときは、`sel4test-manifest` などの tag `17.0.0` が指す commit に合わせる |
+| seL4 の userland の残り（`seL4_libs`、`capdl-loader-app` など） | 今は加えない | 2026-11-12 に Rust initializer を選んだため、C loader と musl の TLS patch は不要。既存の C smoke test は引き続き `sel4runtime` だけを link する |
 
 ## CardputerZero の公式の上流
 

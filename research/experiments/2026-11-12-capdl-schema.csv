@@ -1,0 +1,8 @@
+run_id,capdl_revision,ghc,resolver,phase,result,detail
+upstream-json,23e3c5bbc0fe9f97959e635c94728c99c1acf90e,9.2.8,lts-20.25,add-spec,failed,missing field executable
+fork-old-toolchain,26b8d39c17e99e5423763e9ed292a1d123c39f56,9.2.8,lts-20.25,build-plan,failed,S-4804 dependency bounds
+fork-declared-toolchain,26b8d39c17e99e5423763e9ed292a1d123c39f56,9.10.3,lts-24.32,cold-build,passed,79 actions compile step 394.8 seconds
+fixture-v1,26b8d39c17e99e5423763e9ed292a1d123c39f56,9.10.3,lts-24.32,test-script,failed,endpoint null not handled by assertion script
+notices-v1,26b8d39c17e99e5423763e9ed292a1d123c39f56,9.10.3,lts-24.32,license-read,failed,root directory permissions inherited by cp --parents
+fixture-final,26b8d39c17e99e5423763e9ed292a1d123c39f56,9.10.3,lts-24.32,normal-empty-error,passed,JSON fields checked and invalid input rejected
+embed-final,26b8d39c17e99e5423763e9ed292a1d123c39f56,9.10.3,lts-24.32,add-spec,passed,nonempty spec program header
