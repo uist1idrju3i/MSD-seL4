@@ -10,8 +10,8 @@ DMA と PIO の選び方、IOMMU がないことの影響、QEMU で確かめら
 
 | driver | 依存する driver | 調査 | 状態 |
 |---|---|---|---|
-| GPIO | - | [soc-blocks.md](soc-blocks.md) | 調査済み |
-| UART（mini UART、PL011） | GPIO、clock | [soc-blocks.md](soc-blocks.md) | 調査済み |
+| GPIO | - | [gpio.md](gpio.md) | 調査済み |
+| UART（mini UART、PL011） | GPIO、clock | [uart-pl011.md](uart-pl011.md)、mini UART は [soc-blocks.md](soc-blocks.md) | 調査済み |
 | mailbox（firmware との通信） | - | [soc-blocks.md](soc-blocks.md) | 調査済み |
 | I2C（BSC） | GPIO | [soc-blocks.md](soc-blocks.md) | 調査済み |
 | SPI | GPIO、DMA | [soc-blocks.md](soc-blocks.md) | 調査済み |
@@ -42,7 +42,7 @@ DMA と PIO の選び方、IOMMU がないことの影響、QEMU で確かめら
 - 内部の 6 つの I2C の device は BSC1 の 1 本の bus にあります。I2C の部品は、client ごとに使える address を許可表で限ります。
 - M5IOE1 は電源の保持、共有の reset（キーボードと USB hub）、LCD の reset と backlight、拡張端子の電源を 1 つで制御します。M5IOE1 の部品は、client ごとに使える pin と操作を許可表で限ります。register の仕様は M5Stack の GPL の driver にしかありません。
 - 資料だけでは決まらない項目は、[実機の確認の計画](../experiments/hardware-checklist.md) にまとめました。
-- QEMU の raspi3b で試せるのは、SoC 側の手順（GPIO、I2C、SPI の PIO、SDHOST の PIO、DWC2 の DMA mode、mailbox の一部）だけです。CardputerZero の device（TCA8418、ST7789V、M5IOE1、ES8389 など）は QEMU にありません。
+- QEMU の raspi3b で試せる範囲は model の実装に限られます。[GPIO](gpio.md) は FSEL/set/clear/level の状態を持ちますが、開発 image と同版の upstream 10.0.13 には GPIO の edge/pull/IRQ がありません。[PL011](uart-pl011.md) の IRQ と受信はありますが、pin mux、baud 波形、FIFO の時間特性は実機確認が要ります。CardputerZero の device（TCA8418、ST7789V、M5IOE1、ES8389 など）は QEMU にありません。
 
 ## 作る順序の案（利用者の判断）
 
