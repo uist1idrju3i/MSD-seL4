@@ -59,3 +59,7 @@
 
 - `main` の `publish-dev-image` は、来歴を検証できる同じ入力の image が公開済みなら build と push を省きます。Trivy の DB を `actions/cache` に置きます。
 - Trivy を 0.76.2 に、`debian:trixie-slim` の digest と Debian snapshot を 20261109T224401Z に上げました。
+
+### 修正
+
+- Build の Trivy を runner と同じ UID/GID で動かし、cache の `fanal` directory を runner が読めず保存に失敗する警告を防ぎます。Docker socket の group だけを追加し、scan の条件は変えません。
