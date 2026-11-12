@@ -6,6 +6,8 @@
 
 ### 追加
 
+- TOML の静的 system 宣言から AArch32 capDL と capability 表を作る標準ライブラリだけの generator を追加しました。serial/client の宣言と生成表、parser JSON の CSpace・VSpace を照合する独立 checker、拒否・決定性・mutation の試験を加えました。component と boot の実装は後続 PR です。
+
 - capDL の JSON tool（coliasgroup/capdl `26b8d39`）を専用 Docker stage で build し、strip 済み `parse-capDL` を開発用 image に追加しました。GHC 9.10.3、Stack 3.7.1、lts-24.32 と配布物の SHA-256 を固定し、schema fixture と pin 検査を加えました。
 - root initializer を Rust の `sel4-capdl-initializer` に変更する 2026-11-12 の決定を記録しました。旧案 B は履歴として残し、C loader の初期化モデルの Isabelle 証明が使えなくなること、generator と initializer が証明の対象外であることを明記しました。製品の起動経路と generator の実装は後続 PR です。
 

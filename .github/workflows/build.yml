@@ -43,7 +43,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: >-
           python3 .github/scripts/changed-files.py
-          '.github/workflows/build.yml' '.gitmodules' 'vendor/**' 'docker/**' 'tools/**' 'projects/**' 'patches/**' 'tests/msd-sel4-dev/**'
+          '.github/workflows/build.yml' '.gitmodules' 'vendor/**' 'docker/**' 'tools/**' 'projects/**' 'patches/**' 'tests/msd-sel4-dev/**' 'tests/capdl/**'
 
   kernel-verified:
     name: kernel-verified
@@ -83,6 +83,11 @@ jobs:
 
       - name: Check development image for other host UIDs
         run: tests/msd-sel4-dev/run.sh
+
+      - name: Check generated capDL and capability mutations
+        run: >-
+          docker/msd-sel4-dev env MSD_CAPDL_PARSER_TESTS=1
+          python3 -m unittest discover -s tests/capdl -k Parser -v
 
       - name: Build seL4 kernel (ARM_bcm2837_verified)
         run: |

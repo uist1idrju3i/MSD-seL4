@@ -1,0 +1,14 @@
+run_id,environment,phase,cases,passed,rejected,failed,skipped,result
+host-v1,python-3.12.16,host-unit,24,20,0,0,4,passed
+parser-v1,image-inputs-036a7993dd036120,parser-unit,4,4,0,0,0,passed
+determinism-v1,python-3.12.16,same-input-calls,5,5,0,0,0,identical-bytes
+mutation-v1,image-inputs-036a7993dd036120,cdl-mutants,8,0,8,0,0,all-detected
+host-v2,python-3.12.16,host-unit,24,20,0,0,4,passed
+parser-v2,image-inputs-036a7993dd036120,parser-unit,4,3,0,1,0,failed-parser-success-assertion
+determinism-v2,python-3.12.16,same-input-calls,5,5,0,0,0,identical-bytes
+host-v3,python-3.12.16,host-unit,26,20,0,0,6,passed
+parser-v3,image-inputs-036a7993dd036120,parser-unit,6,6,0,0,0,passed
+determinism-v3,python-3.12.16,same-input-calls,5,5,0,0,0,identical-bytes
+mutation-v3,image-inputs-036a7993dd036120,cdl-mutants,8,0,8,0,0,all-detected
+model-kind-v3,image-inputs-036a7993dd036120,parser-model-rejection,1,0,1,0,0,rejected-before-checker
+json-level-v3,image-inputs-036a7993dd036120,json-mutants,2,0,2,0,0,all-detected

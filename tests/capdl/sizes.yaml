@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: BSD-3-Clause
+# AArch32 unit-test constants, not a production kernel-size source.
+seL4_Slot: 4
+seL4_TCBObject: 9
+seL4_EndpointObject: 4
+seL4_NotificationObject: 4
+seL4_PageDirectoryObject: 14
+seL4_PageTableObject: 10
